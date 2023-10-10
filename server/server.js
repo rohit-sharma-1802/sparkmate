@@ -30,7 +30,7 @@ app.post('/signup', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const existingUser = await users.findOne({email})
@@ -48,6 +48,8 @@ app.post('/signup', async (req, res) => {
         }
 
         const insertedUser = await users.insertOne(data)
+
+        console.log(insertedUser);
 
         const token = jwt.sign(insertedUser, sanitizedEmail, {
             expiresIn: 60 * 24
@@ -68,7 +70,7 @@ app.post('/login', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const user = await users.findOne({email})
@@ -98,7 +100,7 @@ app.get('/user', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const query = {user_id: userId}
@@ -117,7 +119,7 @@ app.put('/addmatch', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const query = {user_id: userId}
@@ -134,11 +136,13 @@ app.put('/addmatch', async (req, res) => {
 // Get all Users by userIds in the Database
 app.get('/users', async (req, res) => {
     const client = new MongoClient(uri)
-    const userIds = JSON.parse(req.query.userIds)
+    const { userIds } = req.query;
+    
+    const userIDs = userIds ? JSON.parse(req.query.userIds) : []
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const pipeline =
@@ -146,7 +150,7 @@ app.get('/users', async (req, res) => {
                 {
                     '$match': {
                         'user_id': {
-                            '$in': userIds
+                            '$in': userIDs
                         }
                     }
                 }
@@ -168,7 +172,7 @@ app.get('/gendered-users', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
         const query = {gender_identity: {$eq: gender}}
         const foundUsers = await users.find(query).toArray()
@@ -186,7 +190,7 @@ app.put('/user', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const users = database.collection('users')
 
         const query = {user_id: formData.user_id}
@@ -222,7 +226,7 @@ app.get('/messages', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const messages = database.collection('messages')
 
         const query = {
@@ -242,7 +246,7 @@ app.post('/message', async (req, res) => {
 
     try {
         await client.connect()
-        const database = client.db('app-data')
+        const database = client.db('SparkMate')
         const messages = database.collection('messages')
 
         const insertedMessage = await messages.insertOne(message)

@@ -1,4 +1,4 @@
-import TinderCard from 'react-tinder-card'
+// import TinderCard from 'react-tinder-card'
 import {useEffect, useState} from 'react'
 import ChatContainer from '../components/ChatContainer'
 import {useCookies} from 'react-cookie'
@@ -69,9 +69,9 @@ const Dashboard = () => {
         console.log(name + ' left the screen!')
     }
 
-    const matchedUserIds = user?.matches.map(({user_id}) => user_id).concat(userId)
+    const matchedUserIds = user?.matches?.map(({user_id}) => user_id).concat(userId)
 
-    const filteredGenderedUsers = genderedUsers?.filter(genderedUser => !matchedUserIds.includes(genderedUser.user_id))
+    const filteredGenderedUsers = genderedUsers?.filter(genderedUser => !matchedUserIds?.includes(genderedUser.user_id))
 
 
     console.log('filteredGenderedUsers ', filteredGenderedUsers)
@@ -83,7 +83,7 @@ const Dashboard = () => {
                 <div className="swipe-container">
                     <div className="card-container">
 
-                        {filteredGenderedUsers?.map((genderedUser) => <div>Biplaw is a randi</div>
+                        {filteredGenderedUsers?.map((genderedUser, index) => <div key={index}>Biplaw is a randi</div>
 
                             // <TinderCard
                             //     className="swipe"
