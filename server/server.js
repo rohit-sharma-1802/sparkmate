@@ -77,6 +77,8 @@ app.post('/login', async (req, res) => {
 
         const correctPassword = await bcrypt.compare(password, user.hashed_password)
 
+        console.log("in login module.");
+
         if (user && correctPassword) {
             const token = jwt.sign(user, email, {
                 expiresIn: 60 * 24
@@ -176,6 +178,9 @@ app.get('/gendered-users', async (req, res) => {
         const users = database.collection('users')
         const query = {gender_identity: {$eq: gender}}
         const foundUsers = await users.find(query).toArray()
+        // const query = {user_id: '3996ae6d-0d70-4533-89c2-47ccbafbb7e5'}
+        // const foundUsers = await users.find(query)
+        // res.send(user)
         res.json(foundUsers)
 
     } finally {
