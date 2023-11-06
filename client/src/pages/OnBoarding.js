@@ -3,15 +3,14 @@ import {useState} from 'react'
 import {useCookies} from 'react-cookie'
 import {useNavigate} from 'react-router-dom'
 import axios from 'axios'
+import ImageUpload from '../components/ImageUpload'
 
 const OnBoarding = () => {
     const [cookies, setCookie, removeCookie] = useCookies(null)
     const [formData, setFormData] = useState({
         user_id: cookies.UserId,
         first_name: "",
-        dob_day: "",
-        dob_month: "",
-        dob_year: "",
+       dob: "",
         show_gender: false,
         gender_identity: "man",
         gender_interest: "woman",
@@ -62,20 +61,30 @@ const OnBoarding = () => {
 
                 <form onSubmit={handleSubmit}>
                     <section>
-                        <label htmlFor="first_name">First Name</label>
+                        <label htmlFor="first_name">Full Name</label>
                         <input
                             id="first_name"
                             type='text'
                             name="first_name"
-                            placeholder="First Name"
+                            placeholder="Full Name"
                             required={true}
                             value={formData.first_name}
                             onChange={handleChange}
                         />
 
-                        <label>Birthday</label>
+                        <label>Date of Birth</label>
                         <div className="multiple-input-container">
                             <input
+                                id='dob'
+                                type='date'
+                                name='dob'
+                                required={true}
+                                value={formData.dob}
+                                onChange={handleChange} 
+                            />
+                            
+                            
+                            {/* <input
                                 id="dob_day"
                                 type="number"
                                 name="dob_day"
@@ -103,7 +112,7 @@ const OnBoarding = () => {
                                 required={true}
                                 value={formData.dob_year}
                                 onChange={handleChange}
-                            />
+                            /> */}
                         </div>
 
                         <label>Gender</label>
@@ -137,7 +146,7 @@ const OnBoarding = () => {
                             <label htmlFor="more-gender-identity">More</label>
                         </div>
 
-                        <label htmlFor="show-gender">Show Gender on my Profile</label>
+                        {/* <label htmlFor="show-gender">Show Gender on my Profile</label>
 
                         <input
                             id="show-gender"
@@ -145,9 +154,9 @@ const OnBoarding = () => {
                             name="show_gender"
                             onChange={handleChange}
                             checked={formData.show_gender}
-                        />
+                        /> */}
 
-                        <label>Show Me</label>
+                        <label>Interested in</label>
 
                         <div className="multiple-input-container">
                             <input
@@ -186,21 +195,25 @@ const OnBoarding = () => {
                             type="text"
                             name="about"
                             required={true}
-                            placeholder="I like long walks..."
+                            placeholder="I like to listen music..."
                             value={formData.about}
                             onChange={handleChange}
                         />
 
-                        <input type="submit"/>
+                        <input type="submit" className='submit'/>
                     </section>
 
                     <section>
 
                         <label htmlFor="url">Profile Photo</label>
                         <input
-                            type="url"
-                            name="url"
-                            id="url"
+                            type="file" 
+                            name="image"
+                            accept="image/*"
+                            id="image"
+                            // type="url"
+                            // name="url"
+                            // id="url"
                             onChange={handleChange}
                             required={true}
                         />
@@ -208,6 +221,7 @@ const OnBoarding = () => {
                             {formData.url && <img src={formData.url} alt="profile pic preview"/>}
                         </div>
 
+                        {/* <ImageUpload /> */}
 
                     </section>
 

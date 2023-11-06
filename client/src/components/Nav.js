@@ -1,5 +1,6 @@
-import whiteLogo from "../images/tinder_logo_white.png";
-import colorLogo from "../images/color-logo-tinder.png";
+import whiteLogo from "../images/sparkmate-logo.png";
+import colorLogo from "../images/sparkmate-logo.png";
+
 
 const Nav = ({ authToken, minimal, setShowModal, showModal, setIsSignUp }) => {
   const handleClick = () => {
@@ -10,11 +11,13 @@ const Nav = ({ authToken, minimal, setShowModal, showModal, setIsSignUp }) => {
   return (
     <nav>
       <div className="logo-container">
-        <img
+        {/* <img
           className="logo"
           src={minimal ? colorLogo : whiteLogo}
           alt="logo"
-        />
+        /> */
+        <h3 className="logo">&#9829; Sparkmate</h3>
+        }
       </div>
       {!authToken && !minimal && (
         <button

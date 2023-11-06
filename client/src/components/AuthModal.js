@@ -2,6 +2,8 @@ import { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { useCookies } from 'react-cookie'
+import playstoreicon from '../images/playstore-icon.png';
+import appleicon from '../images/apple-icon.png'
 
 
 const AuthModal = ({ setShowModal,  isSignUp }) => {
@@ -13,9 +15,6 @@ const AuthModal = ({ setShowModal,  isSignUp }) => {
 
     let navigate = useNavigate()
 
-    console.log(email, password, confirmPassword)
-
-
     const handleClick = () => {
         setShowModal(false)
     }
@@ -24,12 +23,26 @@ const AuthModal = ({ setShowModal,  isSignUp }) => {
         e.preventDefault()
 
         try {
+            if(email.s)
             if (isSignUp && (password !== confirmPassword)) {
                 setError('Passwords need to match!')
                 return
             }
+            // if (isSignUp && password.length < 8) {
+            //     setError("Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character.");
+            //     return;
+            //   }
+          
+            //   if (!/[a-zA-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*()_+]/.test(password)) {
+            //     setError("Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character.");
+            //     return;
+            //   }
+
 
             const response = await axios.post(`http://localhost:8000/${isSignUp ? 'signup' : 'login'}`, { email, password })
+
+            
+          
 
             setCookie('AuthToken', response.data.token)
             setCookie('UserId', response.data.userId)
@@ -51,7 +64,7 @@ const AuthModal = ({ setShowModal,  isSignUp }) => {
             <div className="close-icon" onClick={handleClick}>ⓧ</div>
 
             <h2>{isSignUp ? 'CREATE ACCOUNT': 'LOG IN'}</h2>
-            <p>By clicking Log In, you agree to our terms. Learn how we process your data in our Privacy Policy and Cookie Policy.</p>
+            <p>By clicking Log In, you agree to our terms and conditions.</p>
             <form onSubmit={handleSubmit}>
                 <input
                     type="email"
@@ -82,7 +95,10 @@ const AuthModal = ({ setShowModal,  isSignUp }) => {
             </form>
 
             <hr/>
-            <h2>GET THE APP</h2>
+            <div className='icon-container'>
+                <img src={playstoreicon} className='icons'></img>
+                <img src={appleicon} className='icons'></img>
+            </div>
 
         </div>
     )
