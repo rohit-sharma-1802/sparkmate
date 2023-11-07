@@ -95,7 +95,7 @@ const Dashboard = () => {
             </ul>
           </div>
           <div className="search_chat">
-            <div>
+            <div className="search-container">
               <input type="text" placeholder="Search or start new chat" />
               <ion-icon name="search-outline"></ion-icon>
             </div>
@@ -154,6 +154,45 @@ const Dashboard = () => {
                 </div>
                 <div className="message_p">
                   <p>Hey!</p>
+                </div>
+              </div>
+            </div>
+            <div className="block">
+              <div className="imgBox">
+                <img src="images/img7.png" className="cover" alt="" />
+              </div>
+              <div className="details">
+                <div className="listHead">
+                  <h4>Jenna</h4>
+                </div>
+                <div className="message_p">
+                  <p>I'll get back to you</p>
+                </div>
+              </div>
+            </div>
+            <div className="block">
+              <div className="imgBox">
+                <img src="images/img7.png" className="cover" alt="" />
+              </div>
+              <div className="details">
+                <div className="listHead">
+                  <h4>Jenna</h4>
+                </div>
+                <div className="message_p">
+                  <p>I'll get back to you</p>
+                </div>
+              </div>
+            </div>
+            <div className="block">
+              <div className="imgBox">
+                <img src="images/img7.png" className="cover" alt="" />
+              </div>
+              <div className="details">
+                <div className="listHead">
+                  <h4>Jenna</h4>
+                </div>
+                <div className="message_p">
+                  <p>I'll get back to you</p>
                 </div>
               </div>
             </div>
@@ -282,7 +321,7 @@ const Dashboard = () => {
                 <p>
                   <strong>I would describe myself as:</strong> She/Her
                 </p>
-                <p>
+                <p className="about_me">
                   <strong>About me:</strong> Lorem ipsum dolor, sit amet
                   consectetur adipisicing elit. Architecto eaque cum ullam ipsam
                   esse voluptates, modi eos praesentium harum itaque dignissimos
