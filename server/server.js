@@ -323,16 +323,16 @@ app.put("/user", async (req, res) => {
     });
   }
 
-  // Validating date format
-  const { dob_day, dob_month, dob_year } = formData;
-  if (!isValidDate(dob_day, dob_month, dob_year)) {
-    return res.status(400).json({ error: "Invalid date" });
-  }
+  // // Validating date format
+  // const { dob_day, dob_month, dob_year } = formData;
+  // if (!isValidDate(dob_day, dob_month, dob_year)) {
+  //   return res.status(400).json({ error: "Invalid date" });
+  // }
 
-  // Validating first name
-  if (formData.first_name && !nameRegex.test(formData.first_name)) {
-    return res.status(400).json({ error: "Invalid first name" });
-  }
+  // // Validating first name
+  // if (formData.first_name && !nameRegex.test(formData.first_name)) {
+  //   return res.status(400).json({ error: "Invalid first name" });
+  // }
 
   try {
     await client.connect();

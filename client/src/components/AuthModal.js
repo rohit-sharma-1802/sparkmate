@@ -40,20 +40,20 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
 
   const checkOTP = async (e) => {
     e.preventDefault();
-    console.log(otpValue);
     const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
       email,
       otpValue,
     });
     if (verifyOTP && isSignUp) {
+      const success = verifyOTP.status === 200;
       setCookie("AuthToken", verifyOTP.data.token);
       setCookie("UserId", verifyOTP.data.userId);
-
-      const success = verifyOTP.status === 200;
       if (success && isSignUp) navigate("/onboarding");
       if (success && !isSignUp) navigate("/dashboard");
     } else console.log(error);
   };
+
+  console.log("Cookies:", cookies);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
