@@ -1,106 +1,199 @@
-import { useState } from 'react'
-import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
-import { useCookies } from 'react-cookie'
-import playstoreicon from '../images/playstore-icon.png';
-import appleicon from '../images/apple-icon.png'
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useCookies } from "react-cookie";
+import playstoreicon from "../images/playstore-icon.png";
+import appleicon from "../images/apple-icon.png";
 
+const AuthModal = ({ setShowModal, isSignUp }) => {
+  const [email, setEmail] = useState(null);
+  const [password, setPassword] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState(null);
+  const [error, setError] = useState(null);
+  const [cookies, setCookie, removeCookie] = useCookies(null);
 
-const AuthModal = ({ setShowModal,  isSignUp }) => {
-    const [email, setEmail] = useState(null)
-    const [password, setPassword] = useState(null)
-    const [confirmPassword, setConfirmPassword] = useState(null)
-    const [error, setError] = useState(null)
-    const [ cookies, setCookie, removeCookie] = useCookies(null)
+  const [sendOTP, setSendOTP] = useState(true);
+  const [otpGenerated, setOtpGenerated] = useState(false);
+  const [otpValue, setOTPValue] = useState("");
 
-    let navigate = useNavigate()
+  let navigate = useNavigate();
 
-    const handleClick = () => {
-        setShowModal(false)
+  const handleClick = () => {
+    setShowModal(false);
+  };
+
+  const otpVerifier = async (e) => {
+    e.preventDefault();
+    const response = await axios.post(`http://localhost:8000/signup`, {
+      email,
+      password,
+    });
+    if (response.status === 409) setError("User already exists");
+    const success = response.status === 201;
+    if (success && isSignUp) {
+      setPassword("");
+      setOTPValue("");
+      setSendOTP(false);
     }
+    return;
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
+  const checkOTP = async (e) => {
+    e.preventDefault();
+    console.log(otpValue);
+    const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
+      email,
+      otpValue,
+    });
+    if (verifyOTP && isSignUp) {
+      setCookie("AuthToken", verifyOTP.data.token);
+      setCookie("UserId", verifyOTP.data.userId);
 
-        try {
-            if(email.s)
-            if (isSignUp && (password !== confirmPassword)) {
-                setError('Passwords need to match!')
-                return
-            }
-            // if (isSignUp && password.length < 8) {
-            //     setError("Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character.");
-            //     return;
-            //   }
-          
-            //   if (!/[a-zA-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*()_+]/.test(password)) {
-            //     setError("Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character.");
-            //     return;
-            //   }
+      const success = verifyOTP.status === 200;
+      if (success && isSignUp) navigate("/onboarding");
+      if (success && !isSignUp) navigate("/dashboard");
+    } else console.log(error);
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (isSignUp && password !== confirmPassword) {
+        setError("Passwords need to match!");
+        return;
+      }
+      // if (isSignUp && password.length < 8) {
+      //   setError(
+      //     "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+      //   );
+      //   return;
+      // }
 
-            const response = await axios.post(`http://localhost:8000/${isSignUp ? 'signup' : 'login'}`, { email, password })
+      // if (
+      //   !/[a-zA-Z]/.test(password) ||
+      //   !/\d/.test(password) ||
+      //   !/[!@#$%^&*()_+]/.test(password)
+      // ) {
+      //   setError(
+      //     "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+      //   );
+      //   return;
+      // }
 
-            
-          
+      //   const response = await axios.post(
+      //     `http://localhost:8000/verifyUser`, {email, password}
+      //   );
 
-            setCookie('AuthToken', response.data.token)
-            setCookie('UserId', response.data.userId)
+      const response = await axios.post(
+        `http://localhost:8000/${isSignUp ? "signup" : "login"}`,
+        { email, password }
+      );
 
-            const success = response.status === 201
-            if (success && isSignUp) navigate ('/onboarding')
-            if (success && !isSignUp) navigate ('/dashboard')
+      setCookie("AuthToken", response.data.token);
+      setCookie("UserId", response.data.userId);
 
-            window.location.reload()
+      const success = response.status === 201;
+      if (success && isSignUp) navigate("/onboarding");
+      if (success && !isSignUp) navigate("/dashboard");
 
-        } catch (error) {
-            console.log(error)
-        }
-
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    return (
-        <div className="auth-modal">
-            <div className="close-icon" onClick={handleClick}>ⓧ</div>
+  return (
+    <div className="auth-modal">
+      <div className="close-icon" onClick={handleClick}>
+        ⓧ
+      </div>
 
-            <h2>{isSignUp ? 'CREATE ACCOUNT': 'LOG IN'}</h2>
-            <p>By clicking Log In, you agree to our terms and conditions.</p>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="email"
-                    required={true}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="password"
-                    required={true}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                {isSignUp && <input
-                    type="password"
-                    id="password-check"
-                    name="password-check"
-                    placeholder="confirm password"
-                    required={true}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                />}
-                <input className="secondary-button" type="submit"/>
-                <p>{error}</p>
-            </form>
+      <h2>{isSignUp ? "CREATE ACCOUNT" : "LOG IN"}</h2>
+      <p>By clicking Log In, you agree to our terms and conditions.</p>
 
-            <hr/>
-            <div className='icon-container'>
-                <img src={playstoreicon} className='icons'></img>
-                <img src={appleicon} className='icons'></img>
-            </div>
+      {/* signupModal */}
+      {isSignUp && sendOTP ? (
+        <form onSubmit={otpVerifier}>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="email"
+            required={true}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="password"
+            required={true}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {isSignUp && sendOTP && (
+            <input
+              type="password"
+              id="password-check"
+              name="password-check"
+              placeholder="confirm password"
+              required={true}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          )}
+          <input className="secondary-button" value="Send OTP" type="submit" />
+          <p>{error}</p>
+        </form>
+      ) : isSignUp && !sendOTP ? (
+        <form onSubmit={checkOTP}>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="email"
+            required={true}
+            disabled
+          />
+          <input
+            type="text"
+            id="otpValue"
+            name="otpValue"
+            placeholder="Enter OTP"
+            required={true}
+            value={otpValue}
+            onChange={(e) => setOTPValue(e.target.value)}
+          />
+          <input className="secondary-button" value="Verify" type="submit" />
+          <p>{error}</p>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="email"
+            required={true}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="password"
+            required={true}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <input className="secondary-button" type="submit" />
+          <p>{error}</p>
+        </form>
+      )}
 
-        </div>
-    )
-}
-export default AuthModal
+      <hr />
+      <div className="icon-container">
+        <img src={playstoreicon} className="icons"></img>
+        <img src={appleicon} className="icons"></img>
+      </div>
+    </div>
+  );
+};
+export default AuthModal;

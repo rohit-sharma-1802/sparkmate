@@ -12,3 +12,5 @@ function isValidDate(day, month, year) {
         date <= eighteenYearsAgo
     );
 }
+
+module.exports = isValidDate;

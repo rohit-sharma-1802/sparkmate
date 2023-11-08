@@ -4,77 +4,153 @@ import ChatContainer from "../components/ChatContainer";
 import { useCookies } from "react-cookie";
 import axios from "axios";
 import React from "react";
+import MatchContainer from "../components/MatchContainer";
 
 const Dashboard = () => {
-  // const [user, setUser] = useState(null)
-  // const [genderedUsers, setGenderedUsers] = useState([])
-  // const [lastDirection, setLastDirection] = useState()
-  // const [cookies, setCookie, removeCookie] = useCookies(['user'])
+  const [user, setUser] = useState(null);
+  const [genderedUsers, setGenderedUsers] = useState([]);
+  const [lastDirection, setLastDirection] = useState();
+  const [cookies, setCookie, removeCookie] = useCookies(["user"]);
+  const [chatListStatus, setChatListStatus] = useState(false);
+  const [matchListStatus, setMatchListStatus] = useState(true);
 
-  // const userId = cookies.UserId
+  //changing the status of the chat and match to be displayed in the left side
 
-  // const getUser = async () => {
-  //     try {
-  //         const response = await axios.get('http://localhost:8000/user', {
-  //             params: {userId}
-  //         })
-  //         setUser(response.data)
-  //     } catch (error) {
-  //         console.log(error)
-  //     }
-  // }
-  // const getGenderedUsers = async () => {
-  //     try {
-  //         const response = await axios.get('http://localhost:8000/gendered-users')
-  //         console.log(response);
-  //         setGenderedUsers([response.data])
-  //     } catch (error) {
-  //         console.log(error)
-  //     }
-  // }
+  const activeChatList = () => {
+    setChatListStatus(true);
+    setMatchListStatus(false);
+    console.log("activated click");
+  };
 
-  // console.log("gendred users", genderedUsers);
+  const activeMatchList = () => {
+    setChatListStatus(false);
+    setMatchListStatus(true);
+    console.log("activated click");
+  };
 
-  // useEffect(() => {
-  //     getUser()
+  const userId = cookies.UserId;
+  const authToken = cookies.AuthToken;
 
-  // }, [])
+  const handleClick = () => {
+    if (authToken) {
+      removeCookie("UserId", cookies.UserId);
+      removeCookie("AuthToken", cookies.AuthToken);
+      window.open("/", "_self");
+      return;
+    }
+  };
+  const getUser = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/user", {
+        params: { userId },
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getGenderedUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/gendered-users");
+      console.log(response);
+      setGenderedUsers([response.data]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  // useEffect(() => {
-  //     if (user) {
-  //         getGenderedUsers()
-  //     }
-  // }, [user])
+  console.log("gendred users", genderedUsers);
 
-  // const updateMatches = async (matchedUserId) => {
-  //     try {
-  //         await axios.put('http://localhost:8000/addmatch', {
-  //             userId,
-  //             matchedUserId
-  //         })
-  //         getUser()
-  //     } catch (err) {
-  //         console.log(err)
-  //     }
-  // }
+  useEffect(() => {
+    getUser();
+  }, []);
 
-  // const swiped = (direction, swipedUserId) => {
-  //     if (direction === 'right') {
-  //         updateMatches(swipedUserId)
-  //     }
-  //     setLastDirection(direction)
-  // }
+  useEffect(() => {
+    if (user) {
+      getGenderedUsers();
+    }
+  }, [user]);
 
-  // const outOfFrame = (name) => {
-  //     console.log(name + ' left the screen!')
-  // }
+  const updateMatches = async (matchedUserId) => {
+    try {
+      await axios.put("http://localhost:8000/addmatch", {
+        userId,
+        matchedUserId,
+      });
+      getUser();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  // const matchedUserIds = user?.matches?.map(({user_id}) => user_id).concat(userId)
+  const swiped = (direction, swipedUserId) => {
+    if (direction === "right") {
+      updateMatches(swipedUserId);
+    }
+    setLastDirection(direction);
+  };
 
-  // const filteredGenderedUsers = genderedUsers?.filter(genderedUser => !matchedUserIds?.includes(genderedUser.user_id))
+  const outOfFrame = (name) => {
+    console.log(name + " left the screen!");
+  };
 
-  // console.log('filteredGenderedUsers ', filteredGenderedUsers)
+  const matchedUserIds = user?.matches
+    ?.map(({ user_id }) => user_id)
+    .concat(userId);
+
+  const filteredGenderedUsers = genderedUsers?.filter(
+    (genderedUser) => !matchedUserIds?.includes(genderedUser.user_id)
+  );
+
+  console.log("filteredGenderedUsers ", filteredGenderedUsers);
+
   return (
+    /*
+    <div className="card-container">
+              {filteredGenderedUsers?.map((genderedUser, index) => (
+                <TinderCard
+                  className="swipe"
+                  key={genderedUser.user_id}
+                  onSwipe={(dir) => swiped(dir, genderedUser.user_id)}
+                  onCardLeftScreen={() => outOfFrame(genderedUser.first_name)}
+                >
+                  <div className="rightSide">
+                    <div className="left-icon">
+                      <ion-icon name="arrow-back-circle-outline"></ion-icon>
+                    </div>
+                    <div className="person-card">
+                      <div className="the-card">
+                        <div className="the-front">
+                          <img src={genderedUser.image_url} alt={genderedUser.name} />
+                        </div>
+                        <div className="the-back">
+                          <p>
+                            <strong>Name:</strong> {genderedUser.name}
+                          </p>
+                          <p>
+                            <strong>Age:</strong> {genderedUser.age}
+                          </p>
+                          <p>
+                            <strong>I would describe myself as:</strong>{" "}
+                            {genderedUser.description}
+                          </p>
+                          <p className="about_me">
+                            <strong>About me:</strong> {genderedUser.about_me}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="right-icon">
+                      <ion-icon name="arrow-forward-circle-outline"></ion-icon>
+                    </div>
+                  </div>
+                </TinderCard>
+              ))}
+              <div className="swipe-info">
+                {lastDirection ? <p>You swiped {lastDirection}</p> : <p />}
+              </div>
+            </div>
+    */
     <div className="user-dashboard">
       <div className="container">
         <div className="leftSide">
@@ -83,185 +159,28 @@ const Dashboard = () => {
               <img src="images/user.jpg" alt="" className="cover" />
             </div>
             <ul className="nav_icons">
-              <li>
+              <li onClick={activeMatchList}>
                 <ion-icon name="person-add-outline"></ion-icon>
               </li>
-              <li>
+              <li onClick={activeChatList}>
                 <ion-icon name="chatbox"></ion-icon>
               </li>
-              <li>
+              <li onClick={handleClick}>
                 <ion-icon name="log-out-outline"></ion-icon>
               </li>
             </ul>
           </div>
           <div className="search_chat">
-            <div>
+            {/* <div className="search-container">
               <input type="text" placeholder="Search or start new chat" />
               <ion-icon name="search-outline"></ion-icon>
-            </div>
+            </div> */}
           </div>
-          <div className="chatlist">
-            <div className="block active">
-              <div className="imgBox">
-                <img src="images/img1.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Jhon Doe</h4>
-                </div>
-                <div className="message_p">
-                  <p>How are you doing?</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="block unread">
-              <div className="imgBox">
-                <img src="images/img2.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Andre</h4>
-                </div>
-                <div className="message_p">
-                  <p>I love your youtube videos!</p>
-                  <b>1</b>
-                </div>
-              </div>
-            </div>
-
-            <div className="block unread">
-              <div className="imgBox">
-                <img src="images/img3.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Olivia</h4>
-                </div>
-                <div className="message_p">
-                  <p>I just subscribed to your channel</p>
-                  <b>2</b>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img4.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Parker</h4>
-                </div>
-                <div className="message_p">
-                  <p>Hey!</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img7.png" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Jenna</h4>
-                </div>
-                <div className="message_p">
-                  <p>I'll get back to you</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img8.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Josh</h4>
-                </div>
-                <div className="message_p">
-                  <p>Congratulations</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img9.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Dian</h4>
-                </div>
-                <div className="message_p">
-                  <p>Thanks alot</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img5.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Sam</h4>
-                </div>
-                <div className="message_p">
-                  <p>Did you finish the project?</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img6.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Junior</h4>
-                </div>
-                <div className="message_p">
-                  <p>Nice course</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img10.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Zoey</h4>
-                </div>
-                <div className="message_p">
-                  <p>I'll get back to you</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img8.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Josh</h4>
-                </div>
-                <div className="message_p">
-                  <p>Congratulations</p>
-                </div>
-              </div>
-            </div>
-            <div className="block">
-              <div className="imgBox">
-                <img src="images/img9.jpg" className="cover" alt="" />
-              </div>
-              <div className="details">
-                <div className="listHead">
-                  <h4>Dian</h4>
-                </div>
-                <div className="message_p">
-                  <p>Thanks alot</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {chatListStatus && !matchListStatus ? (
+            <ChatContainer user={user} />
+          ) : (
+            <MatchContainer />
+          )}
         </div>
         <div className="rightSide">
           <div className="left-icon">
@@ -282,7 +201,7 @@ const Dashboard = () => {
                 <p>
                   <strong>I would describe myself as:</strong> She/Her
                 </p>
-                <p>
+                <p className="about_me">
                   <strong>About me:</strong> Lorem ipsum dolor, sit amet
                   consectetur adipisicing elit. Architecto eaque cum ullam ipsam
                   esse voluptates, modi eos praesentium harum itaque dignissimos
