@@ -3,24 +3,35 @@
 * {
     font-family: 'Readex Pro', sans-serif;
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 html,
 body {
     text-align: center;
     background-color: rgb(255, 235, 235);
     margin: 0;
+<<<<<<< HEAD
     padding: 0;
+=======
+    padding: 0 ;
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 }
 
 h2 {
     font-style: italic;
 }
 
+<<<<<<< HEAD
 h4,
 p {
     margin: 0;
+=======
+h4, p {
+    margin : 0;
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 }
-
 .primary-title {
     font-size: 90px;
     color: rgb(255, 255, 255);
@@ -374,8 +385,14 @@ input[type=text] {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+<<<<<<< HEAD
 
     background: linear-gradient(rgb(146, 2, 48) 0%,
+=======
+  
+    background: linear-gradient(
+            rgb(146, 2, 48) 0%,
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
             rgb(245, 120, 89) 130px,
             rgb(255, 255, 255) 100%);
 }
@@ -393,13 +410,18 @@ strong {
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5), 0 2px 5px 0 rgba(0, 0, 0, 0.6);
     display: flex;
     border-radius: 20px;
+<<<<<<< HEAD
     overflow: hidden;
 
+=======
+    overflow: hidden; 
+    
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 }
-
 .container .leftSide {
     border-right: 2px solid rgba(0, 0, 0, 0.2);
     position: relative;
+<<<<<<< HEAD
     width: 30%;
     /* Changed from 30% */
     height: 100%;
@@ -407,6 +429,13 @@ strong {
     /* Changed from 30% */
     background: #fff;
 }
+=======
+    width: 30%; /* Changed from 30% */
+    height: 100%;
+    flex: 30%; /* Changed from 30% */
+    background: #fff;
+  }
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 
 .container .rightSide {
     display: flex;
@@ -470,7 +499,12 @@ strong {
     height: 100%;
     backface-visibility: hidden;
     border-radius: 20px;
+<<<<<<< HEAD
     background: linear-gradient(rgb(255, 255, 255) 0%,
+=======
+    background: linear-gradient(
+            rgb(255, 255, 255) 0%,
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
             rgb(245, 120, 89) 350px,
             rgb(146, 2, 48) 100%);
     color: #333;
@@ -498,7 +532,6 @@ strong {
     color: #e5dfdf;
     transform: scale(0.9);
 }
-
 .header {
     position: relative;
     /* width: 100%; */
@@ -593,8 +626,7 @@ strong {
     align-items: center;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     cursor: pointer;
-}
-
+  }
 .chatlist .block.active {
     background: #e7dede;
 }
@@ -646,7 +678,11 @@ strong {
     justify-content: center;
     align-items: center;
     font-size: 0.75rem;
+<<<<<<< HEAD
     margin-left: 10px;
+=======
+    margin-left: 10px ;
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 }
 
 .message_p p {
@@ -660,5 +696,9 @@ strong {
 }
 
 .search-container {
+<<<<<<< HEAD
     width: 10%;
+=======
+    width:10%;
+>>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
 }
