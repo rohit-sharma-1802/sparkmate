@@ -1,0 +1,73 @@
+.container .rightSide-SwipeCard {
+    background: lightgray;
+    flex: 70%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+strong {
+    font-size: 15px;
+}
+
+.container .rightSide-SwipeCard .person-card {
+    position: relative;
+    width: 50%;
+    height: 85%;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.container .rightSide-SwipeCard .the-card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: all 0.5s ease;
+}
+
+.container .rightSide-SwipeCard .the-card .the-back {
+    padding: 20px;
+    background-color: #e8ecde;
+}
+
+.container .rightSide-SwipeCard .the-card .the-back p {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.container .rightSide-SwipeCard .the-card:hover {
+    transform: rotateY(180deg);
+}
+
+.container .rightSide-SwipeCard img {
+    width: 100%;
+    height: 100%;
+}
+
+.container .rightSide-SwipeCard .the-front {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    background: #ffc728;
+    color: #333;
+}
+
+.container .rightSide-SwipeCard .the-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    background: #fafafa;
+    color: #333;
+    transform: rotateY(180deg);
+}
+
+.container .rightSide-SwipeCard div ion-icon {
+    font-size: 3em;
+}
+
+.container .rightSide-SwipeCard div ion-icon:hover {
+    background-color: rgb(232, 242, 232);
+    border-radius: 10px;
+}
