@@ -33,24 +33,26 @@ const OnBoarding = () => {
       url: "http://localhost:8000/user",
       params: { userId: cookies.UserId },
     })
-      .then((response) => {
-        const {
+    .then((response) => {
+      const {
+        user_id,
+        about,
+        dob,
+        first_name,
+        gender_identity,
+        gender_interest,
+        matches
+      } = response.data;
+      if (user_id && first_name) {
+        setFormData((prevState) => ({
           user_id,
           about,
-          dob,
           first_name,
           gender_identity,
           gender_interest,
-        } = response.data;
-        if (user_id && first_name) {
-          setFormData({
-            user_id,
-            about,
-            first_name,
-            gender_identity,
-            gender_interest,
-            dob,
-          });
+          dob,
+          matches
+        }));
         }
       })
       .catch((error) => console.error(error));
