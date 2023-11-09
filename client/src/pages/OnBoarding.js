@@ -44,6 +44,7 @@ const OnBoarding = () => {
         } = response.data;
         if (user_id && first_name) {
           setFormData({
+            user_id,
             about,
             first_name,
             gender_identity,
