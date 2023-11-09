@@ -8,14 +8,15 @@ import React from "react";
 const App = () => {
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
 
-  const authToken = cookies.AuthToken;
+  const userID = cookies.userId;
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        {authToken && <Route path="/dashboard" element={<Dashboard />} />}
-        {authToken && <Route path="/onboarding" element={<OnBoarding />} />}
+        <Route path="/onboarding" element={<OnBoarding />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        {userID && <Route path="/dashboard" element={<Dashboard />} />}
       </Routes>
     </BrowserRouter>
   );

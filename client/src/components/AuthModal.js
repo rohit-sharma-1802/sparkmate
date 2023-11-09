@@ -5,6 +5,8 @@ import { useCookies } from "react-cookie";
 import playstoreicon from "../images/playstore-icon.png";
 import appleicon from "../images/apple-icon.png";
 
+import { Hearts } from "react-loader-spinner";
+
 const AuthModal = ({ setShowModal, isSignUp }) => {
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
@@ -15,6 +17,8 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
   const [sendOTP, setSendOTP] = useState(true);
   const [otpGenerated, setOtpGenerated] = useState(false);
   const [otpValue, setOTPValue] = useState("");
+  const [otpLoader, setOtpLoader] = useState(false);
+  const [verifyOTPLoader, setVerifyOTPLoader] = useState(false);
 
   let navigate = useNavigate();
 
@@ -24,6 +28,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
 
   const otpVerifier = async (e) => {
     e.preventDefault();
+    setOtpLoader(true);
     const response = await axios.post(`http://localhost:8000/signup`, {
       email,
       password,
@@ -35,17 +40,21 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
       setOTPValue("");
       setSendOTP(false);
     }
-    return;
+    setOtpLoader(false);
+    // return;
   };
 
   const checkOTP = async (e) => {
     e.preventDefault();
+    setVerifyOTPLoader(true);
     const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
       email,
       otpValue,
     });
+    setVerifyOTPLoader(false);
     if (verifyOTP && isSignUp) {
       const success = verifyOTP.status === 200;
+      console.log(verifyOTP);
       setCookie("AuthToken", verifyOTP.data.token);
       setCookie("UserId", verifyOTP.data.userId);
       if (success && isSignUp) navigate("/onboarding");
@@ -140,7 +149,23 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           )}
-          <input className="secondary-button" value="Send OTP" type="submit" />
+          <button className="secondary-button" type="submit">
+            {otpLoader ? (
+              <>
+                <Hearts
+                  height="20"
+                  width="350"
+                  color="red"
+                  ariaLabel="hearts-loading"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                  visible={true}
+                />
+              </>
+            ) : (
+              "SEND OTP"
+            )}
+          </button>
           <p>{error}</p>
         </form>
       ) : isSignUp && !sendOTP ? (
@@ -162,7 +187,23 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
             value={otpValue}
             onChange={(e) => setOTPValue(e.target.value)}
           />
-          <input className="secondary-button" value="Verify" type="submit" />
+          <button className="secondary-button" type="submit">
+            {verifyOTPLoader ? (
+              <>
+                <Hearts
+                  height="20"
+                  width="350"
+                  color="red"
+                  ariaLabel="hearts-loading"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                  visible={true}
+                />
+              </>
+            ) : (
+              "VERIFY"
+            )}
+          </button>
           <p>{error}</p>
         </form>
       ) : (

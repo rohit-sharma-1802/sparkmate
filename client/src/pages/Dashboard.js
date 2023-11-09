@@ -171,12 +171,10 @@ const Dashboard = () => {
             </ul>
           </div>
           <div className="search_chat">
-<<<<<<< HEAD
             {/* <div className="search-container">
               <input type="text" placeholder="Search or start new chat" />
               <ion-icon name="search-outline"></ion-icon>
             </div> */}
-=======
             <div className="search-container">
               <input type="text" placeholder="Search or start new chat" />
               <ion-icon name="search-outline"></ion-icon>
@@ -382,7 +380,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
->>>>>>> 594587a5603a095d8cdcb0dc147d2dabd7ffb7d6
           </div>
           {chatListStatus && !matchListStatus ? (
             <ChatContainer user={user} />
