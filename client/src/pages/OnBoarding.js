@@ -7,17 +7,15 @@ import ImageUpload from "../components/ImageUpload";
 import { Hearts } from "react-loader-spinner";
 
 const OnBoarding = () => {
-  const [cookies, setCookie, removeCookie] = useCookies(null);
+  const [cookies] = useCookies(["user"]);
   const [loader, setLoader] = useState(false);
-  console.log(cookies.user_id);
   const [formData, setFormData] = useState({
-    user_id: cookies.UserId,
+    user_id: cookies.UserId ?? "",
     first_name: "",
     dob: "",
     show_gender: false,
     gender_identity: "man",
     gender_interest: "woman",
-    url: "",
     about: "",
     matches: [],
   });
@@ -37,42 +35,36 @@ const OnBoarding = () => {
     })
       .then((response) => {
         const {
+          user_id,
           about,
-          dob_day,
-          dob_month,
-          dob_year,
+          dob,
           first_name,
           gender_identity,
           gender_interest,
         } = response.data;
-        const dob =
-          dob_year && dob_month && dob_day
-            ? `${dob_year}-${dob_month}-${dob_day}`
-            : "";
-        setFormData({
-          about,
-          first_name,
-          gender_identity,
-          gender_interest,
-          dob,
-        });
+        if (user_id && first_name) {
+          setFormData({
+            about,
+            first_name,
+            gender_identity,
+            gender_interest,
+            dob,
+          });
+        }
       })
       .catch((error) => console.error(error));
   }, []);
 
   const handleSubmit = async (e) => {
-    console.log("submitted");
     setLoader(true);
     e.preventDefault();
     const formdata = new FormData();
     for (const key in formData) {
-      console.log(key, formData[key]);
       formdata.append(key, formData[key]);
     }
     try {
       const response = await axios.post("http://localhost:8000/user", formdata);
       setLoader(false);
-      console.log(response);
       const success = response.status === 200;
       if (success) navigate("/dashboard");
     } catch (err) {
@@ -81,7 +73,6 @@ const OnBoarding = () => {
   };
 
   const handleChange = (e) => {
-    console.log("e", e);
     const value =
       e.target.type === "checkbox"
         ? e.target.checked
@@ -89,7 +80,6 @@ const OnBoarding = () => {
         ? e.target.files[0]
         : e.target.value;
     const name = e.target.name;
-    console.log("name", value);
 
     setFormData((prevState) => ({
       ...prevState,
