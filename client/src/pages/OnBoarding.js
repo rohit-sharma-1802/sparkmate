@@ -41,16 +41,19 @@ const OnBoarding = () => {
           first_name,
           gender_identity,
           gender_interest,
+          matches,
         } = response.data;
         if (user_id && first_name) {
-          setFormData({
+          setFormData((prevState) => ({
+            ...prevState,
             user_id,
             about,
             first_name,
             gender_identity,
             gender_interest,
             dob,
-          });
+            matches: Array.isArray(matches) ? matches : [],
+          }));
         }
       })
       .catch((error) => console.error(error));
