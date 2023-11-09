@@ -364,19 +364,15 @@ app.post("/user", async (req, res) => {
     if (fs.existsSync(uploadPath)) {
       fs.unlink(uploadPath, (err) => {});
     }
-    console.log(result);
     const query = { user_id: formData.user_id };
 
     const updateDocument = {
       $set: {
         first_name: formData.first_name,
-        dob_day: formData.dob_day,
-        dob_month: formData.dob_month,
-        dob_year: formData.dob_year,
+        dob: formData.dob,
         show_gender: formData.show_gender,
         gender_identity: formData.gender_identity,
         gender_interest: formData.gender_interest,
-        url: formData.url,
         about: formData.about,
         matches: formData.matches,
         image: {
@@ -386,7 +382,11 @@ app.post("/user", async (req, res) => {
       },
     };
 
-    const insertedUser = await users.updateOne(query, updateDocument);
+    const options = { upsert: true };
+
+    const insertedUser = await users.updateOne(query, updateDocument, options);
+
+    console.log(insertedUser);
 
     res.json(insertedUser);
   } catch (err) {
