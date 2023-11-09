@@ -1,12 +1,14 @@
 import Nav from "../components/Nav";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ImageUpload from "../components/ImageUpload";
+import { Hearts } from "react-loader-spinner";
 
 const OnBoarding = () => {
   const [cookies, setCookie, removeCookie] = useCookies(null);
+  const [loader, setLoader] = useState(false);
   console.log(cookies.user_id);
   const [formData, setFormData] = useState({
     user_id: cookies.UserId,
@@ -22,14 +24,54 @@ const OnBoarding = () => {
 
   let navigate = useNavigate();
 
+  useEffect(() => {
+    const userId = cookies.UserId;
+    if (!userId) navigate("/");
+  }, []);
+
+  useEffect(() => {
+    axios({
+      method: "GET",
+      url: "http://localhost:8000/user",
+      params: { userId: cookies.UserId },
+    })
+      .then((response) => {
+        const {
+          about,
+          dob_day,
+          dob_month,
+          dob_year,
+          first_name,
+          gender_identity,
+          gender_interest,
+        } = response.data;
+        const dob =
+          dob_year && dob_month && dob_day
+            ? `${dob_year}-${dob_month}-${dob_day}`
+            : "";
+        setFormData({
+          about,
+          first_name,
+          gender_identity,
+          gender_interest,
+          dob,
+        });
+      })
+      .catch((error) => console.error(error));
+  }, []);
+
   const handleSubmit = async (e) => {
     console.log("submitted");
-    console.log(formData);
+    setLoader(true);
     e.preventDefault();
+    const formdata = new FormData();
+    for (const key in formData) {
+      console.log(key, formData[key]);
+      formdata.append(key, formData[key]);
+    }
     try {
-      const response = await axios.put("http://localhost:8000/user", {
-        formData,
-      });
+      const response = await axios.post("http://localhost:8000/user", formdata);
+      setLoader(false);
       console.log(response);
       const success = response.status === 200;
       if (success) navigate("/dashboard");
@@ -41,8 +83,13 @@ const OnBoarding = () => {
   const handleChange = (e) => {
     console.log("e", e);
     const value =
-      e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      e.target.type === "checkbox"
+        ? e.target.checked
+        : e.target.type === "file"
+        ? e.target.files[0]
+        : e.target.value;
     const name = e.target.name;
+    console.log("name", value);
 
     setFormData((prevState) => ({
       ...prevState,
@@ -196,7 +243,23 @@ const OnBoarding = () => {
               onChange={handleChange}
             />
 
-            <input type="submit" className="submit" />
+            <button className="submit" type="submit">
+              {loader ? (
+                <>
+                  <Hearts
+                    height="20"
+                    width="350"
+                    color="red"
+                    ariaLabel="hearts-loading"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                    visible={true}
+                  />
+                </>
+              ) : (
+                "SUBMIT"
+              )}
+            </button>
           </section>
 
           <section>

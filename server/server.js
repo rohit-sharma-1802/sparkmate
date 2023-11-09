@@ -24,7 +24,8 @@ const validGenders = ["man", "woman", "everyone"];
 const validGenderInterests = ["man", "woman", "everyone"];
 const nameRegex = /^[A-Za-z]+$/;
 const validEmailDomain = /@nitk\.edu\.in$/;
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const passwordRegex =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const app = express();
 app.use(cors());
@@ -110,17 +111,19 @@ app.post("/signup", async (req, res) => {
       expiresIn: 60 * 24,
     });
 
-    transporter.sendMail(mailOptions, async function (error, info) {
-      try {
-        console.log("Email sent: " + info.response);
-        res.status(201).json({ token, userId: generatedUserId });
-      } catch (error) {
-        console.error(error);
-        return res
-          .status(500)
-          .json({ error: "Error sending OTP. Please try again later." });
-      }
-    });
+    res.status(201).json({ token, userId: generatedUserId });
+
+    // transporter.sendMail(mailOptions, async function (error, info) {
+    //   try {
+    //     console.log("Email sent: " + info.response);
+    //     res.status(201).json({ token, userId: generatedUserId });
+    //   } catch (error) {
+    //     console.error(error);
+    //     return res
+    //       .status(500)
+    //       .json({ error: "Error sending OTP. Please try again later." });
+    //   }
+    // });
   } catch (err) {
     console.log(err);
   } finally {
@@ -137,10 +140,13 @@ app.post("/verifyUser", async (req, res) => {
     const database = client.db("SparkMate");
     const users = database.collection("users");
     const user = await users.findOne({ email, otp: otpValue });
+    console.log(user);
     if (user) {
       await users.updateOne({ email }, { $unset: { otp: 1, otp_expiry: 1 } });
 
-      res.status(200).json({ message: "OTP verified successfully" });
+      res
+        .status(200)
+        .json({ message: "OTP verified successfully", userId: user.user_id });
     } else {
       res.status(401).json({ error: "Invalid OTP" });
     }
@@ -297,8 +303,10 @@ async function getRandomSuggestions(usersCollection, userId) {
   return randomSuggestions;
 }
 
-app.put("/user", async (req, res) => {
-  const formData = req.body.formData;
+app.post("/user", async (req, res) => {
+  const formData = req.body;
+
+  console.log(formData);
 
   // Validating gender
   if (
@@ -323,16 +331,16 @@ app.put("/user", async (req, res) => {
     });
   }
 
-  // // Validating date format
+  // Validating date format
   // const { dob_day, dob_month, dob_year } = formData;
   // if (!isValidDate(dob_day, dob_month, dob_year)) {
   //   return res.status(400).json({ error: "Invalid date" });
   // }
 
-  // // Validating first name
-  // if (formData.first_name && !nameRegex.test(formData.first_name)) {
-  //   return res.status(400).json({ error: "Invalid first name" });
-  // }
+  // Validating first name
+  if (formData.first_name && !nameRegex.test(formData.first_name)) {
+    return res.status(400).json({ error: "Invalid first name" });
+  }
 
   try {
     await client.connect();
