@@ -28,41 +28,78 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
 
   const otpVerifier = async (e) => {
     e.preventDefault();
-    setOtpLoader(true);
-    const response = await axios.post(`http://localhost:8000/signup`, {
-      email,
-      password,
-    });
-    if (response.status === 409) setError("User already exists");
-    const success = response.status === 201;
-    if (success && isSignUp) {
-      setPassword("");
-      setOTPValue("");
-      setSendOTP(false);
+    if (isSignUp && password !== confirmPassword) {
+      setError("Passwords need to match!");
+      return;
     }
-    setOtpLoader(false);
-    // return;
-  };
+    if (isSignUp && password.length < 8) {
+      setError(
+        "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+      );
+      return;
+    }
 
+    if (
+      !/[a-zA-Z]/.test(password) ||
+      !/\d/.test(password) ||
+      !/[!@#$%^&*()_+]/.test(password)
+    ) {
+      setError(
+        "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+      );
+      return;
+    }
+    setError("");
+    setOtpLoader(true);
+  
+    try {
+      const response = await axios.post(`http://localhost:8000/signup`, {
+        email,
+        password,
+      });
+  
+      const success = response.status === 201;
+      if (success && isSignUp) {
+        setPassword("");
+        setOTPValue("");
+        setSendOTP(false);
+      } else {
+        setError("Failed to send OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      setError("Account already exists");
+    } finally {
+      setOtpLoader(false);
+    }
+  };
+  
   const checkOTP = async (e) => {
     e.preventDefault();
     setVerifyOTPLoader(true);
-    const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
-      email,
-      otpValue,
-    });
-    setVerifyOTPLoader(false);
-    if (verifyOTP && isSignUp) {
+  
+    try {
+      const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
+        email,
+        otpValue,
+      });
+  
       const success = verifyOTP.status === 200;
-      console.log(verifyOTP);
-      setCookie("AuthToken", verifyOTP.data.token);
-      setCookie("UserId", verifyOTP.data.userId);
-      if (success && isSignUp) navigate("/onboarding");
-      if (success && !isSignUp) navigate("/dashboard");
-    } else console.log(error);
+      if (success && isSignUp) {
+        setCookie("AuthToken", verifyOTP.data.token);
+        setCookie("UserId", verifyOTP.data.userId);
+        navigate("/onboarding");
+      } else {
+        setError("Invalid OTP. Please enter a valid OTP and try again.");
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setVerifyOTPLoader(false);
+    }
   };
 
-  console.log("Cookies:", cookies);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,23 +108,23 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
         setError("Passwords need to match!");
         return;
       }
-      // if (isSignUp && password.length < 8) {
-      //   setError(
-      //     "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
-      //   );
-      //   return;
-      // }
+      if (isSignUp && password.length < 8) {
+        setError(
+          "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+        );
+        return;
+      }
 
-      // if (
-      //   !/[a-zA-Z]/.test(password) ||
-      //   !/\d/.test(password) ||
-      //   !/[!@#$%^&*()_+]/.test(password)
-      // ) {
-      //   setError(
-      //     "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
-      //   );
-      //   return;
-      // }
+      if (
+        !/[a-zA-Z]/.test(password) ||
+        !/\d/.test(password) ||
+        !/[!@#$%^&*()_+]/.test(password)
+      ) {
+        setError(
+          "Invalid password. Password must contain at least 8 characters, including one letter, one number, and one special character."
+        );
+        return;
+      }
 
       //   const response = await axios.post(
       //     `http://localhost:8000/verifyUser`, {email, password}
@@ -97,17 +134,23 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
         `http://localhost:8000/${isSignUp ? "signup" : "login"}`,
         { email, password }
       );
-
+  
       setCookie("AuthToken", response.data.token);
       setCookie("UserId", response.data.userId);
-
+  
       const success = response.status === 201;
       if (success && isSignUp) navigate("/onboarding");
       if (success && !isSignUp) navigate("/dashboard");
-
+  
       window.location.reload();
     } catch (error) {
-      console.log(error);
+      console.error("Error logging in or signing up:", error);
+  
+      if (error.response && error.response.status === 400) {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -151,17 +194,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
           )}
           <button className="secondary-button" type="submit">
             {otpLoader ? (
-              <>
-                <Hearts
-                  height="20"
-                  width="350"
-                  color="red"
-                  ariaLabel="hearts-loading"
-                  wrapperStyle={{}}
-                  wrapperClass=""
-                  visible={true}
-                />
-              </>
+              "SENDING OTP..."
             ) : (
               "SEND OTP"
             )}
@@ -189,17 +222,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
           />
           <button className="secondary-button" type="submit">
             {verifyOTPLoader ? (
-              <>
-                <Hearts
-                  height="20"
-                  width="350"
-                  color="red"
-                  ariaLabel="hearts-loading"
-                  wrapperStyle={{}}
-                  wrapperClass=""
-                  visible={true}
-                />
-              </>
+              "VERIFYING..."
             ) : (
               "VERIFY"
             )}

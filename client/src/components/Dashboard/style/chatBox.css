@@ -1,7 +1,7 @@
 .container .rightSide-chatBox {
     position: relative;
     flex: 70%;
-    background: #e5ddd5;
+    background: linear-gradient(360deg, rgba(254, 172, 48, 0.2), rgb(255, 89, 64,0.2));
 }
 
 .container .rightSide-chatBox::before {
@@ -11,7 +11,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    /* background: url("images/pattern.png"); */
     opacity: 0.06;
 }
 
@@ -55,7 +54,7 @@
     text-align: right;
     max-width: 65%;
     padding: 12px;
-    background: #dcf8c8;
+    background: linear-gradient(45deg, rgb(250, 200, 170) 10%, rgb(250, 200, 170));
     border-radius: 10px;
     font-size: 0.9em;
 }
@@ -67,13 +66,7 @@
     right: -12px;
     width: 20px;
     height: 20px;
-    background: linear-gradient(
-        135deg,
-        #dcf8c6 0%,
-        #dcf8c6 50%,
-        transparent 50%,
-        transparent
-    );
+    background: linear-gradient(135deg, rgb(250, 200, 170) 50%, rgb(250, 200, 170) 50%, transparent 50%, transparent);
 }
 
 .message p span {
@@ -116,7 +109,7 @@
     position: relative;
     width: 100%;
     height: 60px;
-    background: #f0f0f0;
+    background: linear-gradient(45deg, rgb(250, 215, 226), rgb(248, 224, 221));
     padding: 15px;
     display: flex;
     justify-content: space-between;
