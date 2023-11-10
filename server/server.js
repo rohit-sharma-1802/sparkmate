@@ -277,7 +277,44 @@ app.put("/addmatch", async (req, res) => {
   }
 });
 
+// Fetch all matches of the current user
+app.post("/matches", async (req, res) => {
+  const { userId } = req.body;
 
+  try {
+    await client.connect();
+    const database = client.db("SparkMate");
+    const users = database.collection("users");
+
+    const currentUser = await users.findOne({ user_id: userId });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const matchedUserIds = currentUser.matches.map(match => match.user_id);
+
+    const matchDetails = await users
+      .find({ user_id: { $in: matchedUserIds } })
+      .project({
+        _id: 0,
+        user_id: 1,
+        about: 1,
+        first_name: 1,
+        gender_identity: 1,
+        gender_interest: 1,
+        dob: 1
+      })
+      .toArray();
+
+    res.json(matchDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await client.close();
+  }
+});
 
 // Get all Users by userIds in the Database
 app.get("/users", async (req, res) => {
