@@ -157,8 +157,8 @@ body {
 }
 
 .chatlist .block .details .listHead {
-  /* display: flex;
-  justify-content: space-between; */
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 2px;
   padding-left: 5%;
   width: 80%;

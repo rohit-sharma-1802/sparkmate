@@ -67,7 +67,7 @@ export default function DashboardComponent() {
     matchedID: "",
   });
   const [suggestionLoader, setSuggestionLoader] = useState(true);
-  const [chatLoader, setChatLoader] = useState(false);
+  const [chatLoader, setChatLoader] = useState(true);
 
   const [tab, setTab] = useState(TABS.PROFILE);
   const [displayChat, setDisplayChat] = useState(null);
@@ -165,6 +165,7 @@ export default function DashboardComponent() {
 
   const changeTab = (event) => {
     if (displayChat.length === 0) setTab(TABS.PROFILE);
+    else if (chatLoader === true) setTab(TABS.PROFILE);
     else setTab(event.target.attributes.iconName?.value);
   };
 

@@ -42,7 +42,13 @@ export default function ChatElement({
         <div className="listHead">
           {loader === false && <h4>{displayName}</h4>}
           {loader === true && (
-            <Skeleton borderRadius={1} height={30} baseColor="red" />
+            <Skeleton
+              borderRadius={10}
+              height={14}
+              width={250}
+              baseColor="#DCDCDC"
+              containerClassName="flex-1"
+            />
           )}
         </div>
         {/* <div className="message_p">
