@@ -2,6 +2,11 @@ import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
 import { useState } from "react";
+import io from 'socket.io-client'
+import axios from "axios"
+import { useCookies } from "react-cookie";
+const socket=io.connect("http://localhost:8000");
+
 
 function ChatBox({ messagesArray, userID }) {
   return (
@@ -66,6 +71,7 @@ export default function ChatWindow({
   matchedID,
 }) {
   const [message, setMessage] = useState("");
+  const [cookie] = useCookies(["user"]);
   const handleUnmatch = () => {
     console.log(`You have unmatched with ${displayName}`);
   };
@@ -75,7 +81,17 @@ export default function ChatWindow({
   };
   const handleAddingEmoji = () => {};
   const handleSend = () => {
-    console.log("message : ", message.trim());
+    socket.emit("message",message)
+    const userId=cookie.UserId;
+  
+  console.log(userId);
+     socket.on("message-from-server", async (message)=>{
+     await axios.post('http://localhost:8000/message',{
+          "from_userId": userId,
+          "to_userId": "b23c37ba-79b8-488e-9c17-bd7557bcc120",
+          "message": message
+        })
+     })
   };
   const handleTyping = (event) => {
     setMessage(event.target.value);

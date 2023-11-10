@@ -1,5 +1,7 @@
 const PORT = 8000;
 const express = require("express");
+const http = require("http");
+const {Server} = require("socket.io");
 const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
@@ -11,6 +13,7 @@ const cloudinary = require("./utils/cloudinary");
 const fileUpload = require("express-fileupload");
 const { generateUniqueId } = require("./utils/GenerateId");
 const fs = require("fs");
+const { generateRoomId } = require("./utils/generateRoomId");
 
 const { isValidDate } = require("./validateDate");
 
@@ -28,10 +31,22 @@ const passwordRegex =
   /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server,{
+  cors:{
+    origin : 'http://localhost:3000'
+  }
+});
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
 
+
+io.on('connection',(socket)=>{
+ socket.on("message",(data)=>{
+  socket.emit("message-from-server",data)
+ })
+})
 const client = new MongoClient(uri);
 
 // Default
@@ -110,6 +125,8 @@ app.post("/signup", async (req, res) => {
     const token = jwt.sign(insertedUser, sanitizedEmail, {
       expiresIn: 60 * 24,
     });
+
+    localStorage.setItem("accesstoken",token)
 
     res.status(201).json({ token, userId: generatedUserId });
 
@@ -214,7 +231,6 @@ app.get("/user", async (req, res) => {
   }
 });
 
-// Update User with a match
 app.put("/addmatch", async (req, res) => {
   const { userId, matchedUserId } = req.body;
 
@@ -223,16 +239,45 @@ app.put("/addmatch", async (req, res) => {
     const database = client.db("SparkMate");
     const users = database.collection("users");
 
-    const query = { user_id: userId };
-    const updateDocument = {
-      $addToSet: { matches: { user_id: matchedUserId } },
-    };
-    const user = await users.updateOne(query, updateDocument);
-    res.send(user);
+    const currentUserQuery = { user_id: userId, likes: matchedUserId };
+    const currentUserAlreadyLiked = await users.findOne(currentUserQuery);
+
+    if (currentUserAlreadyLiked) {
+      const addMatchesQueryCurrentUser = { user_id: userId };
+      const addMatchesUpdateCurrentUser = {
+        $addToSet: { matches: { user_id: matchedUserId } },
+      };
+      await users.updateOne(addMatchesQueryCurrentUser, addMatchesUpdateCurrentUser);
+
+      const addMatchesQueryMatchedUser = { user_id: matchedUserId };
+      const addMatchesUpdateMatchedUser = {
+        $addToSet: { matches: { user_id: userId } },
+      };
+      await users.updateOne(addMatchesQueryMatchedUser, addMatchesUpdateMatchedUser);
+
+      const removeLikedUserQuery = { user_id: userId };
+      const removeLikedUserUpdate = {
+        $pull: { likes: matchedUserId },
+      };
+
+      await users.updateOne(removeLikedUserQuery, removeLikedUserUpdate);
+    } else {
+      const updateMatchedUserDocument = {
+        $addToSet: { likes: userId },
+      };
+      await users.updateOne({ user_id: matchedUserId }, updateMatchedUserDocument);
+    }
+
+    res.send({ success: true });
+  } catch (error) {
+    console.error("Error in /addmatch:", error);
+    res.status(500).send({ error: "Internal Server Error" });
   } finally {
     await client.close();
   }
 });
+
+
 
 // Get all Users by userIds in the Database
 app.get("/users", async (req, res) => {
@@ -396,23 +441,27 @@ app.post("/user", async (req, res) => {
   }
 });
 
-// Get Messages by from_userId and to_userId
+// Get Messages by Room ID
 app.get("/messages", async (req, res) => {
-  const { userId, correspondingUserId } = req.query;
-  const client = new MongoClient(uri);
+  const { from_userId, to_userId } = req.body;
+  const room_id = generateRoomId(from_userId, to_userId);
 
   try {
     await client.connect();
     const database = client.db("SparkMate");
+    console.log("connected")
     const messages = database.collection("messages");
 
-    const query = {
-      from_userId: userId,
-      to_userId: correspondingUserId,
-    };
+    const query = { room_id };
+    const sortOptions = { timestamp: 1 };
+    const foundMessages = await messages
+      .find(query)
+      .sort(sortOptions)
+      .toArray();
 
-    const foundMessages = await messages.find(query).toArray();
     res.send(foundMessages);
+  }catch(e){
+    console.log(e.message);
   } finally {
     await client.close();
   }
@@ -420,18 +469,29 @@ app.get("/messages", async (req, res) => {
 
 // Add a Message to our Database
 app.post("/message", async (req, res) => {
-  const message = req.body.message;
+  const { from_userId, to_userId, message } = req.body;
 
   try {
     await client.connect();
     const database = client.db("SparkMate");
     const messages = database.collection("messages");
 
-    const insertedMessage = await messages.insertOne(message);
+    const room_id = generateRoomId(from_userId, to_userId);
+
+    const insertedMessage = await messages.insertOne({
+      room_id,
+      from_userId,
+      message,
+    });
+
+    io.to(room_id).emit("message", {
+      message
+    });
+
     res.send(insertedMessage);
   } finally {
     await client.close();
   }
 });
 
-app.listen(PORT, () => console.log("Server running on PORT " + PORT));
+server.listen(PORT, () => console.log("Server running on PORT " + PORT));
