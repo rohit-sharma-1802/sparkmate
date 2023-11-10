@@ -157,9 +157,12 @@ body {
 }
 
 .chatlist .block .details .listHead {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
+  /* display: flex;
+  justify-content: space-between; */
+  margin-bottom: 2px;
+  padding-left: 5%;
+  width: 80%;
+  height: 20px;
 }
 
 .chatlist .block .details .listHead h4 {

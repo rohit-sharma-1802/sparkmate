@@ -1,3 +1,6 @@
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+
 import { TABS } from "../../constants/constants";
 
 import "./style/index.css";
@@ -14,7 +17,16 @@ export default function Header({
   return (
     <div className="header">
       <div className="userimg">
-        <img src={displayProfilePic} alt="" className="cover" />
+        {displayProfilePic ? (
+          <img src={displayProfilePic} alt="" className="cover" />
+        ) : (
+          <Skeleton
+            box={true}
+            baseColor="#C0C0C0"
+            width={"100%"}
+            height={"100%"}
+          />
+        )}
       </div>
       <ul className="nav_icons">
         <li>
