@@ -178,7 +178,8 @@ export default function DashboardComponent() {
       return;
     if (filteredGenderedUsers.length === index) {
       setError("You have exceeded your limit");
-    } else {
+    } else if (filteredGenderedUsers.length === 0) return;
+    else {
       const {
         first_name,
         dob,
