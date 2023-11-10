@@ -79,9 +79,12 @@ export default function DashboardComponent() {
     userID: null,
   });
   const [index, setIndex] = useState(1);
-  const [error, setError] = useState("");
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!cookies.UserId) navigate("/");
+  }, [cookies.UserId]);
 
   const getUser = async () => {
     setSuggestionLoader(true);
@@ -177,7 +180,7 @@ export default function DashboardComponent() {
     )
       return;
     if (filteredGenderedUsers.length === index) {
-      setError("You have exceeded your limit");
+      return;
     } else if (filteredGenderedUsers.length === 0) return;
     else {
       const {
@@ -286,7 +289,6 @@ export default function DashboardComponent() {
           about={suggestion.about}
           handleSwipe={handleSwipe}
           loading={suggestionLoader}
-          error={error}
           matchedID={suggestion.matchedID}
         />
       )}

@@ -15,7 +15,6 @@ export default function SwipeCard({
   about,
   handleSwipe,
   loading,
-  error,
   matchedID,
 }) {
   useEffect(() => {
@@ -44,18 +43,14 @@ export default function SwipeCard({
                 width={"100%"}
                 height={"100%"}
               />
-            ) : error.trim().length > 0 ? (
-              <span>{error}</span>
-            ) : (
+            )  : (
               <img src={displayPic} className="cover" alt="" />
             )}
           </div>
           <div className="the-back">
             {loading === true ? (
               <span>Loading...</span>
-            ) : error.trim().length > 0 ? (
-              <span>{error}</span>
-            ) : (
+            )  : (
               <>
                 <p>
                   <strong>Name:</strong> {name}
