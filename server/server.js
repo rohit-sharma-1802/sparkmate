@@ -486,23 +486,25 @@ app.get("/messages", async (req, res) => {
   try {
     await client.connect();
     const database = client.db("SparkMate");
-    console.log("connected")
-    const messages = database.collection("messages");
+    const rooms = database.collection("chatRooms");
 
-    const query = { room_id };
-    const sortOptions = { timestamp: 1 };
-    const foundMessages = await messages
-      .find(query)
-      .sort(sortOptions)
-      .toArray();
+    const room = await rooms.findOne({ room_id });
 
-    res.send(foundMessages);
-  }catch(e){
+    if (room) {
+      const messages = room.messages || [];
+      const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
+
+      res.send(sortedMessages);
+    } else {
+      res.status(404).json({ error: "Chat room doesn't exist" });
+    }
+  } catch (e) {
     console.log(e.message);
   } finally {
     await client.close();
   }
 });
+
 
 // Add a Message to our Database
 app.post("/message", async (req, res) => {
@@ -511,24 +513,64 @@ app.post("/message", async (req, res) => {
   try {
     await client.connect();
     const database = client.db("SparkMate");
-    const messages = database.collection("messages");
+    const chatRooms = database.collection("chatRooms");
 
     const room_id = generateRoomId(from_userId, to_userId);
+    const timestamp = new Date();
 
-    const insertedMessage = await messages.insertOne({
-      room_id,
-      from_userId,
-      message,
-    });
+    // Check if the room already exists
+    const existingRoom = await chatRooms.findOne({ room_id });
 
-    io.to(room_id).emit("message", {
-      message
-    });
+    if (existingRoom) {
+      // Room exists, add the new message to the messages array
+      const updatedRoom = await chatRooms.findOneAndUpdate(
+        { room_id },
+        {
+          $push: {
+            messages: {
+              from_userId,
+              message,
+              timestamp,
+            },
+          },
+        },
+        { returnDocument: 'after' }
+      );
 
-    res.send(insertedMessage);
+      const insertedMessage = updatedRoom.value.messages.slice(-1)[0]; // Get the last inserted message
+
+      // Broadcast the message to the respective room
+      io.to(room_id).emit("message", {
+        message: insertedMessage,
+      });
+
+      res.send(insertedMessage);
+    } else {
+      // Room doesn't exist, create a new room with the first message
+      const newRoom = {
+        room_id,
+        messages: [
+          {
+            from_userId,
+            message,
+            timestamp,
+          },
+        ],
+      };
+
+      const insertedRoom = await chatRooms.insertOne(newRoom);
+
+      // Broadcast the message to the respective room
+      io.to(room_id).emit("message", {
+        message: newRoom.messages[0],
+      });
+
+      res.send(newRoom.messages[0]);
+    }
   } finally {
     await client.close();
   }
 });
+
 
 server.listen(PORT, () => console.log("Server running on PORT " + PORT));
