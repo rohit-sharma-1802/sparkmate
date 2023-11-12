@@ -8,7 +8,7 @@ import "./style/chatBox.css";
 
 const sanitizedString = (params) => params.trim().toLowerCase();
 
-export default function ChatDisplay({ chatsArray, handleChatClick }) {
+export default function ChatDisplay({ chatsArray, handleChatClick, loader }) {
   const [searchText, setSearchText] = useState("");
   const [filteredChats, setFilteredChats] = useState([]);
 
@@ -40,8 +40,15 @@ export default function ChatDisplay({ chatsArray, handleChatClick }) {
         </div>
       </div>
       <div className="chatlist">
-        {filteredChats?.length === 0 && <h4>No available chats</h4>}
-        {filteredChats?.length > 0 &&
+        {loader === true &&
+          Array.from({ length: 8 }).map(() => (
+            <ChatElement loader={loader} handleChatClick={handleChatClick} />
+          ))}
+        {loader === false && filteredChats?.length === 0 && (
+          <h4>No available chats</h4>
+        )}
+        {loader === false &&
+          filteredChats?.length > 0 &&
           filteredChats.map((chat) => {
             return (
               <ChatElement
@@ -53,6 +60,7 @@ export default function ChatDisplay({ chatsArray, handleChatClick }) {
                 noOfUnreadMessages={chat.noOfUnreadMessages ?? 0}
                 handleChatClick={handleChatClick}
                 inboxID={chat.id}
+                loader={loader}
               />
             );
           })}

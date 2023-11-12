@@ -2,8 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import playstoreicon from "../images/playstore-icon.png";
-import appleicon from "../images/apple-icon.png";
+import playstoreicon from "../../images/playstore-icon.png";
+import appleicon from "../../images/apple-icon.png";
 
 import { Hearts } from "react-loader-spinner";
 

@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { ACTIONS } from "../../constants/constants";
 
 import "./style/index.css";
@@ -12,6 +14,8 @@ export default function SwipeCard({
   pronouns,
   about,
   handleSwipe,
+  loading,
+  matchedID,
 }) {
   useEffect(() => {
     document.addEventListener("keydown", handleSwipe, false);
@@ -26,27 +30,42 @@ export default function SwipeCard({
         <ion-icon
           name="arrow-back-circle-outline"
           iconName={ACTIONS.LEFT_SWIPE}
-          onClick={handleSwipe}
+          onClick={(event) => handleSwipe(event, matchedID)}
         ></ion-icon>
       </div>
       <div className="person-card">
         <div className="the-card">
           <div className="the-front">
-            <img src={displayPic} className="cover" alt="" />
+            {loading === true ? (
+              <Skeleton
+                box={true}
+                baseColor="#C0C0C0"
+                width={"100%"}
+                height={"100%"}
+              />
+            )  : (
+              <img src={displayPic} className="cover" alt="" />
+            )}
           </div>
           <div className="the-back">
-            <p>
-              <strong>Name:</strong> {name}
-            </p>
-            <p>
-              <strong>Age:</strong> {age}
-            </p>
-            <p>
-              <strong>I would describe myself as:</strong> {pronouns}
-            </p>
-            <p>
-              <strong>About me:</strong> {about}
-            </p>
+            {loading === true ? (
+              <span>Loading...</span>
+            )  : (
+              <>
+                <p>
+                  <strong>Name:</strong> {name}
+                </p>
+                <p>
+                  <strong>Age:</strong> {age}
+                </p>
+                <p>
+                  <strong>I would describe myself as:</strong> {pronouns}
+                </p>
+                <p>
+                  <strong>About me:</strong> {about}
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -54,7 +73,7 @@ export default function SwipeCard({
         <ion-icon
           name="arrow-forward-circle-outline"
           iconName={ACTIONS.RIGHT_SWIPE}
-          onClick={handleSwipe}
+          onClick={(event) => handleSwipe(event, matchedID)}
         ></ion-icon>
       </div>
     </div>

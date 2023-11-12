@@ -1,7 +1,7 @@
 const PORT = 8000;
 const express = require("express");
 const http = require("http");
-const {Server} = require("socket.io");
+const { Server } = require("socket.io");
 const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
@@ -14,8 +14,6 @@ const fileUpload = require("express-fileupload");
 const { generateUniqueId } = require("./utils/GenerateId");
 const fs = require("fs");
 const { generateRoomId } = require("./utils/generateRoomId");
-
-const { isValidDate } = require("./validateDate");
 
 require("dotenv").config();
 
@@ -32,22 +30,30 @@ const passwordRegex =
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server,{
-  cors:{
-    origin : 'http://localhost:3000'
-  }
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+  },
 });
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
 
+io.on("connection", (socket) => {
+  socket.on("message", (data, cokie) => {
+    const timeStp = new Date();
+    const mes = data;
+    const from_user_Id = cokie;
+    console.log(data, from_user_Id);
+    const combine = { timeStp, mes, from_user_Id };
+    socket.emit("message-from-server", combine);
+  });
+});
 
-io.on('connection',(socket)=>{
- socket.on("message",(data)=>{
-  socket.emit("message-from-server",data)
- })
-})
-const client = new MongoClient(uri);
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 // Default
 app.get("/", async (req, res) => {
@@ -126,21 +132,19 @@ app.post("/signup", async (req, res) => {
       expiresIn: 60 * 24,
     });
 
-    localStorage.setItem("accesstoken",token)
-
     res.status(201).json({ token, userId: generatedUserId });
 
-    // transporter.sendMail(mailOptions, async function (error, info) {
-    //   try {
-    //     console.log("Email sent: " + info.response);
-    //     res.status(201).json({ token, userId: generatedUserId });
-    //   } catch (error) {
-    //     console.error(error);
-    //     return res
-    //       .status(500)
-    //       .json({ error: "Error sending OTP. Please try again later." });
-    //   }
-    // });
+    transporter.sendMail(mailOptions, async function (error, info) {
+      try {
+        console.log("Email sent: " + info.response);
+        res.status(201).json({ token, userId: generatedUserId });
+      } catch (error) {
+        console.error(error);
+        return res
+          .status(500)
+          .json({ error: "Error sending OTP. Please try again later." });
+      }
+    });
   } catch (err) {
     console.log(err);
   } finally {
@@ -225,7 +229,8 @@ app.get("/user", async (req, res) => {
 
     const query = { user_id: userId };
     const user = await users.findOne(query);
-    res.send(user);
+    const { _id, hashed_password, ...filteredUser } = user;
+    res.send(filteredUser);
   } finally {
     await client.close();
   }
@@ -236,48 +241,73 @@ app.put("/addmatch", async (req, res) => {
 
   try {
     await client.connect();
-    const database = client.db("SparkMate");
-    const users = database.collection("users");
 
-    const currentUserQuery = { user_id: userId, likes: matchedUserId };
-    const currentUserAlreadyLiked = await users.findOne(currentUserQuery);
+    const otherUser = await getUserById(matchedUserId);
 
-    if (currentUserAlreadyLiked) {
-      const addMatchesQueryCurrentUser = { user_id: userId };
-      const addMatchesUpdateCurrentUser = {
-        $addToSet: { matches: { user_id: matchedUserId } },
-      };
-      await users.updateOne(addMatchesQueryCurrentUser, addMatchesUpdateCurrentUser);
+    const hasMatchedIndex = otherUser.matches.findIndex(
+      (match) => match.userId === userId && match.hasMatched === false
+    );
 
-      const addMatchesQueryMatchedUser = { user_id: matchedUserId };
-      const addMatchesUpdateMatchedUser = {
-        $addToSet: { matches: { user_id: userId } },
-      };
-      await users.updateOne(addMatchesQueryMatchedUser, addMatchesUpdateMatchedUser);
-
-      const removeLikedUserQuery = { user_id: userId };
-      const removeLikedUserUpdate = {
-        $pull: { likes: matchedUserId },
-      };
-
-      await users.updateOne(removeLikedUserQuery, removeLikedUserUpdate);
-    } else {
-      const updateMatchedUserDocument = {
-        $addToSet: { likes: userId },
-      };
-      await users.updateOne({ user_id: matchedUserId }, updateMatchedUserDocument);
+    if (hasMatchedIndex !== -1) {
+      await updateMatchStatus(userId, matchedUserId);
+      res
+        .status(200)
+        .json({ success: true, message: "Match updated successfully", matched: true });
+      return;
     }
 
-    res.send({ success: true });
+    await addUserMatch(userId, { userId: matchedUserId, hasMatched: false });
+    await addUserMatch(matchedUserId, { userId, hasMatched: false });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Match added successfully" , matched: false});
   } catch (error) {
-    console.error("Error in /addmatch:", error);
-    res.status(500).send({ error: "Internal Server Error" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   } finally {
     await client.close();
   }
 });
 
-// Fetch all matches of the current user
+async function getUserById(userId) {
+  const database = client.db("SparkMate");
+  const users = database.collection("users");
+
+  return await users.findOne({ user_id: userId });
+}
+
+async function addUserMatch(userId, matchObject) {
+  await client.connect();
+  const database = client.db("SparkMate");
+  const users = database.collection("users");
+
+  await users.updateOne(
+    { user_id: userId },
+    { $push: { matches: matchObject } }
+  );
+}
+
+
+async function updateMatchStatus(userId, matchedUserId) {
+  const db = client.db("SparkMate");
+  const users = db.collection("users");
+
+  console.log("Updating matches for:", userId, matchedUserId);
+
+  await users.updateOne(
+    { user_id: userId, "matches.userId": matchedUserId },
+    { $set: { "matches.$.hasMatched": true } }
+  );
+  
+  await users.updateOne(
+    { user_id: matchedUserId, "matches.userId": userId },
+    { $set: { "matches.$.hasMatched": true } }
+  );
+}
+
+// Fetch all matches of the current user with hasMatched: true
+// hasMatched to indicate match has happened from both users
 app.post("/matches", async (req, res) => {
   const { userId } = req.body;
 
@@ -292,10 +322,15 @@ app.post("/matches", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const matchedUserIds = currentUser.matches.map(match => match.user_id);
-
     const matchDetails = await users
-      .find({ user_id: { $in: matchedUserIds } })
+      .find(
+        {
+          user_id: { $ne: userId },
+          matches: {
+            $elemMatch: { user_id: { $in: currentUser.matches.map((match) => match.user_id) }, hasMatched: true }
+          }
+        }
+      )
       .project({
         _id: 0,
         user_id: 1,
@@ -303,7 +338,8 @@ app.post("/matches", async (req, res) => {
         first_name: 1,
         gender_identity: 1,
         gender_interest: 1,
-        dob: 1
+        dob: 1,
+        image: 1
       })
       .toArray();
 
@@ -315,6 +351,7 @@ app.post("/matches", async (req, res) => {
     await client.close();
   }
 });
+
 
 // Get all Users by userIds in the Database
 app.get("/users", async (req, res) => {
@@ -338,7 +375,6 @@ app.get("/users", async (req, res) => {
 
     const foundUsers = await users.aggregate(pipeline).toArray();
 
-    // console.log(foundUsers);
     res.json(foundUsers);
   } finally {
     await client.close();
@@ -385,6 +421,24 @@ async function getRandomSuggestions(usersCollection, userId) {
   return randomSuggestions;
 }
 
+function isValidDate(dob) {
+  const currentDate = new Date();
+  const inputDate = new Date(dob);
+
+  if (isNaN(inputDate.getTime())) {
+    return false;
+  }
+
+  const ageDifferenceMilliseconds = currentDate - inputDate;
+  const ageInYears = ageDifferenceMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
+  console.log(ageInYears);
+  if (ageInYears >= 18) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 app.post("/user", async (req, res) => {
   const formData = req.body;
 
@@ -414,10 +468,10 @@ app.post("/user", async (req, res) => {
   }
 
   // Validating date format
-  // const { dob_day, dob_month, dob_year } = formData;
-  // if (!isValidDate(dob_day, dob_month, dob_year)) {
-  //   return res.status(400).json({ error: "Invalid date" });
-  // }
+  const { dob } = formData;
+  if (!isValidDate(dob)) {
+    return res.status(400).json({ error: "Invalid date / age" });
+  }
 
   // Validating first name
   if (formData.first_name && !nameRegex.test(formData.first_name)) {
@@ -505,10 +559,11 @@ app.get("/messages", async (req, res) => {
   }
 });
 
-
 // Add a Message to our Database
 app.post("/message", async (req, res) => {
   const { from_userId, to_userId, message } = req.body;
+
+  console.log(from_userId, to_userId, message);
 
   try {
     await client.connect();
@@ -534,7 +589,7 @@ app.post("/message", async (req, res) => {
             },
           },
         },
-        { returnDocument: 'after' }
+        { returnDocument: "after" }
       );
 
       const insertedMessage = updatedRoom.value.messages.slice(-1)[0]; // Get the last inserted message
@@ -571,6 +626,5 @@ app.post("/message", async (req, res) => {
     await client.close();
   }
 });
-
 
 server.listen(PORT, () => console.log("Server running on PORT " + PORT));

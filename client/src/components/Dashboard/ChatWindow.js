@@ -2,15 +2,19 @@ import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
 import { useState } from "react";
-import io from 'socket.io-client'
+import io from "socket.io-client"
+import { Cookies, useCookies } from "react-cookie";
 import axios from "axios"
-import { useCookies } from "react-cookie";
 const socket=io.connect("http://localhost:8000");
 
-
 function ChatBox({ messagesArray, userID }) {
+  console.log(messagesArray)
+  socket.on("message-from-server",(data)=>{
+    messagesArray=[...messagesArray,data];
+   
+  })
   return (
-    <div className="chatbox">
+    <div className="chatbox" >
       {messagesArray?.length === 0 && <h1>Chat Now!</h1>}
       {messagesArray?.length > 0 &&
         messagesArray?.map((message, index) => {
@@ -20,13 +24,17 @@ function ChatBox({ messagesArray, userID }) {
               key={index}
               className={
                 id === userID ? "message my_msg" : "message friend_msg"
-              }
+              } style={{display : "flex",flexDirection:"column",justifyContent:"flex-end"}}
             >
-              <p>
-                {comment}
+              <div >
+              
+                 <p >
+                {message}
                 <br />
-                <span>{messagedAt}</span>
+                {/* <span>{messagedAt}</span> */}
               </p>
+              </div>
+             
             </div>
           );
         })}
@@ -66,12 +74,11 @@ export default function ChatWindow({
   displayProfilePic,
   displayName,
   status,
-  messagesArray,
   userID,
   matchedID,
 }) {
   const [message, setMessage] = useState("");
-  const [cookie] = useCookies(["user"]);
+  const [cookie] = useCookies(["user"])
   const handleUnmatch = () => {
     console.log(`You have unmatched with ${displayName}`);
   };
@@ -80,22 +87,21 @@ export default function ChatWindow({
     handleUnmatch();
   };
   const handleAddingEmoji = () => {};
-  const handleSend = () => {
-    socket.emit("message",message)
-    const userId=cookie.UserId;
   
-  console.log(userId);
-     socket.on("message-from-server", async (message)=>{
-     await axios.post('http://localhost:8000/message',{
-          "from_userId": userId,
-          "to_userId": "b23c37ba-79b8-488e-9c17-bd7557bcc120",
-          "message": message
-        })
-     })
+const [messagesArray,setmessagesArray]=useState([])
+
+  const handleSend = async () => {
+   setmessagesArray((prevMessages) => [...prevMessages,message.trim()]);
+socket.emit("message",message,cookie.UserId)
+    console.log("message : ", message.trim());
+    await axios.post("http://localhost:8000/message",{
+      from_userId: cookie.UserId, to_userId: matchedID, message : message
+    })
   };
   const handleTyping = (event) => {
     setMessage(event.target.value);
   };
+  console.log(messagesArray)
   return (
     <div className="rightSide-chatBox">
       <ChatHeader
