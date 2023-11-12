@@ -5,6 +5,7 @@ import {
   RIGHT_ARROW_KEYCODE,
   ACTIONS,
 } from "../constants/constants";
+import axios from "axios";
 
 export const changeTabUtils = ({ areChatsAvailable, areChatsLoading, tab }) => {
   if (!tab) return TABS.PROFILE;
@@ -32,7 +33,7 @@ export const getFilteredMatches = ({ user, genderedUsers }) => {
   return filteredGenderedUsers;
 };
 
-export const getSanitizedMatches = (matches) => {
+const getSanitizedMatches = (matches) => {
   const sanitizedMatches = matches.map((match) => {
     const { first_name, url = "", image, user_id } = match;
     const displayPic = url.length === 0 ? image?.url : url;
@@ -56,6 +57,7 @@ export const getSanitizedSuggestion = (suggestion) => {
     url = "",
     image,
     user_id,
+    pronouns = "She/Her",
   } = suggestion;
   const displayPic = url.length === 0 ? image?.url : url;
   const age = dob
@@ -69,19 +71,99 @@ export const getSanitizedSuggestion = (suggestion) => {
     age: calculateAge(age),
     matchedID: user_id,
     about,
+    pronouns,
   };
 };
 
 export const isValidKeyCodeForSwipe = (keyCode) =>
   keyCode && keyCode !== LEFT_ARROW_KEYCODE && keyCode !== RIGHT_ARROW_KEYCODE;
 
-export const areSuggestionAvailable = ({ suggestionArrayLength, index }) =>
-  suggestionArrayLength === index || suggestionArrayLength === 0;
-  
-export const isValidLeftSwipe = (event) =>
+const areSuggestionAvailable = ({ lengthOfSugestionArray, index }) =>
+  lengthOfSugestionArray === index || lengthOfSugestionArray === 0;
+
+const isValidLeftSwipe = (event) =>
   event.target.attributes.iconName?.value === ACTIONS.LEFT_SWIPE ||
   event.keyCode === LEFT_ARROW_KEYCODE;
 
-export const isValidRightSwipe = (event) =>
+const isValidRightSwipe = (event) =>
   event.target.attributes.iconName?.value === ACTIONS.RIGHT_SWIPE ||
   event.keyCode === RIGHT_ARROW_KEYCODE;
+
+export const handleSwipeEvent = async ({
+  event,
+  lengthOfSugestionArray,
+  suggestion,
+  index,
+  userId,
+  matchedUserId,
+}) => {
+  if (isValidKeyCodeForSwipe(event.keyCode)) return;
+  if (areSuggestionAvailable({ lengthOfSugestionArray, index })) return;
+
+  if (isValidLeftSwipe(event)) {
+    console.log("You left swiped!");
+    // TODO : make a api call to handle left swipes
+  } else if (isValidRightSwipe(event)) {
+    await putAxiosCall({
+      url: `/addMatch`,
+      data: { userId, matchedUserId },
+    });
+  }
+  const { displayPic, age, about, first_name, matchedID, pronouns } =
+    getSanitizedSuggestion(suggestion);
+
+  return { displayPic, age, about, first_name, matchedID, pronouns };
+};
+
+export const getAllMatches = async ({ user, userId, genderPref }) => {
+  const { data, hasErrorOccurred } = await getAxiosCall({
+    route: `/gendered-users`,
+    params: { userId, gender: genderPref },
+  });
+  return !hasErrorOccurred
+    ? getSanitizedMatches(data)
+    : [{ displayProfilePic: "", displayName: "", userID: null }];
+};
+
+export const renderMatchUtil = async ({ userId }) => {
+  const { data, hasErrorOccurred } = await getAxiosCall({
+    route: `/user`,
+    params: { userId },
+  });
+  return !hasErrorOccurred
+    ? getSanitizedSuggestion(data)
+    : {
+        displayPic: "",
+        about: "",
+        matchedID: "",
+        first_name: "",
+        dob: "",
+        pronouns: "",
+      };
+};
+
+export const getAxiosCall = async ({ route, params }) => {
+  const response = { data: undefined, hasErrorOccurred: false };
+  const BASE_PATH = `http://localhost:8000`;
+  const url = `${BASE_PATH}${route}`;
+
+  try {
+    const { data } = await axios({ method: "GET", url, params });
+    response.data = data;
+  } catch (error) {
+    console.log(error);
+    response.hasErrorOccurred = true;
+  }
+  return response;
+};
+
+export const putAxiosCall = async ({ route, data }) => {
+  const BASE_PATH = `http://localhost:8000`;
+  const url = `${BASE_PATH}${route}`;
+
+  try {
+    await axios({ method: "PUT", url, data });
+  } catch (error) {
+    console.log(error);
+  }
+};
