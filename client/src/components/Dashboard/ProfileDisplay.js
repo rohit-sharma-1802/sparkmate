@@ -7,6 +7,7 @@ import { ProfileDisplayContext } from "../../context/dashboardContext";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
+import ErrorBoundary from "../ErrorBoundary";
 
 const sanitizedString = (params) => params.trim().toLowerCase();
 
@@ -47,32 +48,34 @@ export default function ProfileDisplay() {
           <ion-icon name="search-outline"></ion-icon>
         </div>
       </div>
-      <div className="chatlist">
-        {loader === true &&
-          Array.from({ length: 8 }).map(() => <ProfileElement />)}
-        {loader === false && filteredProfile?.length === 0 && (
-          <h4>
-            {tab === TABS.PROFILE
-              ? `No available matches`
-              : `No available chats`}
-          </h4>
-        )}
-        {loader === false &&
-          filteredProfile?.length > 0 &&
-          filteredProfile.map((profile) => {
-            const displayName =
-              profile.displayName.charAt(0).toUpperCase() +
-              profile.displayName.slice(1);
-            return (
-              <ProfileElement
-                key={profile.id}
-                displayProfilePic={profile.displayProfilePic}
-                displayName={displayName}
-                ID={profile.userID}
-              />
-            );
-          })}
-      </div>
+      <ErrorBoundary fallback="Error">
+        <div className="chatlist">
+          {loader === true &&
+            Array.from({ length: 8 }).map(() => <ProfileElement />)}
+          {loader === false && filteredProfile?.length === 0 && (
+            <h4>
+              {tab === TABS.PROFILE
+                ? `No available matches`
+                : `No available chats`}
+            </h4>
+          )}
+          {loader === false &&
+            filteredProfile?.length > 0 &&
+            filteredProfile.map((profile) => {
+              const displayName =
+                profile.displayName.charAt(0).toUpperCase() +
+                profile.displayName.slice(1);
+              return (
+                <ProfileElement
+                  key={profile.id}
+                  displayProfilePic={profile.displayProfilePic}
+                  displayName={displayName}
+                  ID={profile.userID}
+                />
+              );
+            })}
+        </div>
+      </ErrorBoundary>
     </>
   );
 }

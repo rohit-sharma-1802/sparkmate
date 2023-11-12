@@ -3,6 +3,7 @@ import "./style/swipeCard.css";
 import "./style/chatBox.css";
 import { useContext, useState } from "react";
 import { ChatContext } from "../../context/dashboardContext";
+import ErrorBoundary from "../ErrorBoundary";
 
 function ChatBox() {
   const { messagesArray, userID } = useContext(ChatContext);
@@ -82,9 +83,11 @@ export default function ChatWindow() {
   return (
     <div className="rightSide-chatBox">
       <ChatHeader />
-      <div className="chatbox">
-        <ChatBox />
-      </div>
+      <ErrorBoundary fallback="Error">
+        <div className="chatbox">
+          <ChatBox />
+        </div>
+      </ErrorBoundary>
       <div className="chat_input">
         <ion-icon name="happy-outline" onClick={handleAddingEmoji}></ion-icon>
         <input
