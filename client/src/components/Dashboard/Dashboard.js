@@ -2,25 +2,28 @@
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 import Header from "./Header";
 import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
 import ProfileDisplay from "./ProfileDisplay";
+import ErrorBoundary from "../ErrorBoundary";
 
 import { TABS } from "../../constants/constants";
-import calculateAge from "../../utils/calculateAge";
 import {
-  areSuggestionAvailable,
   changeTabUtils,
+  getAllMatches,
+  getAxiosCall,
   getFilteredMatches,
-  getSanitizedMatches,
   getSanitizedSuggestion,
-  isValidKeyCodeForSwipe,
-  isValidLeftSwipe,
-  isValidRightSwipe,
+  handleSwipeEvent,
+  renderMatchUtil,
 } from "../../utils/helper";
+
+import {
+  ChatContext,
+  ProfileDisplayContext,
+} from "../../context/dashboardContext";
 
 import matchedImg1 from "../../images/img2.jpg";
 import matchedImg2 from "../../images/img3.jpg";
@@ -28,10 +31,6 @@ import matchedImg2 from "../../images/img3.jpg";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import {
-  ChatContext,
-  ProfileDisplayContext,
-} from "../../context/dashboardContext";
 
 const TEMP_CHATS_ARRAY = [
   {
@@ -68,26 +67,32 @@ const TEMP_MESSAGE_ARRAY = [
 export default function DashboardComponent() {
   const [user, setUser] = useState(null);
   const [genderedUsers, setGenderedUsers] = useState([]);
+
   const [suggestion, setSuggestion] = useState({
-    displayPic: "",
-    about: "",
-    dob: "",
-    pronouns: "She/Her",
-    matchedID: "",
-  });
-  const [suggestionLoader, setSuggestionLoader] = useState(true);
-  const [viewMatchLoader, setViewMatchLoader] = useState(true);
-  const [index, setIndex] = useState(1);
-  const [tab, setTab] = useState(TABS.PROFILE);
-  const [displayChat, setDisplayChat] = useState(null);
-  const [displayMatches, setDisplayMatches] = useState([
-    {
-      displayProfilePic: "",
-      displayName: "",
-      userID: null,
+    data: {
+      displayPic: "",
+      about: "",
+      dob: "",
+      pronouns: "She/Her",
+      matchedID: "",
+      first_name: "",
     },
-  ]);
-  const [chatLoader, setChatLoader] = useState(false);
+    loading: true,
+    showingLikedUserProfile: false,
+  });
+
+  const [index, setIndex] = useState(0);
+  const [tab, setTab] = useState(TABS.PROFILE);
+
+  const [displayChat, setDisplayChat] = useState({
+    data: [{ displayProfilePic: "", displayName: "", userID: null }],
+    loading: false,
+  });
+  const [displayMatches, setDisplayMatches] = useState({
+    data: [{ displayProfilePic: "", displayName: "", userID: null }],
+    loading: true,
+  });
+
   const [chatsDetails, setChatsDetails] = useState({
     displayProfilePic: "",
     displayName: "",
@@ -95,42 +100,32 @@ export default function DashboardComponent() {
     status: "",
     userID: null,
   });
+
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
   const navigate = useNavigate();
-
-  const SERVER_URL = `http://localhost:8000`;
 
   useEffect(() => {
     if (!cookies.UserId) navigate("/");
   }, [cookies.UserId]);
 
   const getUser = async () => {
-    setSuggestionLoader(true);
-    try {
-      const response = await axios({
-        method: "GET",
-        url: `${SERVER_URL}/user`,
-        params: { userId: cookies.UserId },
-      });
-      setUser(response.data);
-      setSuggestionLoader(false);
-    } catch (error) {
-      console.error(error);
-    }
+    const { data, hasErrorOccurred } = await getAxiosCall({
+      route: `/user`,
+      params: { userId: cookies.UserId },
+    });
+    if (!hasErrorOccurred) setUser(data);
   };
 
   const getGenderedUsers = async () => {
-    setSuggestionLoader(true);
-    try {
-      const response = await axios({
-        method: "GET",
-        url: `${SERVER_URL}/gendered-users`,
-        params: { userId: cookies.UserId, gender: user.gender_interest },
-      });
-      setGenderedUsers(response.data);
-      setSuggestionLoader(false);
-    } catch (error) {
-      console.error(error);
+    setSuggestion((prevState) => ({ ...prevState, loading: true }));
+    const res = await getAxiosCall({
+      route: `/gendered-users`,
+      params: { userId: cookies.UserId, gender: user.gender_interest },
+    });
+    const { data, hasErrorOccurred } = res;
+    if (!hasErrorOccurred) {
+      setGenderedUsers(data);
+      setSuggestion((prevState) => ({ ...prevState, loading: false }));
     }
   };
 
@@ -144,123 +139,85 @@ export default function DashboardComponent() {
     }
   }, [cookies?.UserId, user?.gender_interest]);
 
-  const filteredGenderedUsers = getFilteredMatches({ user, genderedUsers });
-
   // TODO : complete this function
 
   const getMatches = async () => {
-    setViewMatchLoader(true);
-    try {
-      if (!user) return;
-      const response = await axios({
-        method: "GET",
-        url: `${SERVER_URL}/gendered-users`,
-        params: { userId: cookies.UserId, gender: user.gender_interest },
-      });
-      const sanitizedMatches = getSanitizedMatches(response.data);
-      setDisplayMatches(sanitizedMatches);
-      setViewMatchLoader(false);
-    } catch (error) {
-      console.error(error);
-    }
+    setDisplayMatches((prevState) => ({ ...prevState, loading: true }));
+    if (!user) return;
+    const data = await getAllMatches({
+      userId: user.user_id,
+      genderPref: user.gender_interest,
+    });
+    setDisplayMatches(() => ({ data: [data[0]], loading: false }));
   };
+
+  const filteredGenderedUsers = getFilteredMatches({
+    user,
+    genderedUsers,
+    displayMatches: displayMatches.data,
+  });
 
   useEffect(() => {
     getMatches();
-  }, [filteredGenderedUsers[0]]);
+  }, [user]);
 
   useEffect(() => {
     if (filteredGenderedUsers.length > 0) {
-      const { displayPic, age, about, first_name, matchedID } =
-        getSanitizedSuggestion(filteredGenderedUsers[0]);
-      setSuggestion((prevState) => ({
-        ...prevState,
-        displayPic,
-        dob: age,
-        about,
-        first_name,
-        matchedID,
+      const data = getSanitizedSuggestion(filteredGenderedUsers[0]);
+      setSuggestion(() => ({
+        loading: false,
+        data,
       }));
     }
   }, [filteredGenderedUsers[0]]);
 
   const changeTab = (event) => {
     const chooseTab = changeTabUtils({
-      areChatsAvailable: displayChat.length,
-      areChatsLoading: chatLoader,
+      areChatsAvailable: displayChat.data.length,
+      areChatsLoading: displayChat.loading,
       tab: event.target.attributes.iconName?.value,
     });
     setTab(chooseTab);
   };
 
   const handleRenderMatch = async (userId) => {
-    try {
-      setSuggestionLoader(true);
-      const response = await axios({
-        method: "GET",
-        url: `${SERVER_URL}/user`,
-        params: { userId },
-      });
-      const { displayPic, age, about, first_name, matchedID } =
-        getSanitizedSuggestion(response.data);
-      setSuggestion((prevState) => ({
-        ...prevState,
-        displayPic,
-        dob: age,
-        about,
-        first_name,
-        matchedID,
-      }));
-      setSuggestionLoader(false);
-    } catch (error) {
-      console.error(error);
-    }
+    setSuggestion((prevState) => ({ ...prevState, loading: true }));
+    const data = await renderMatchUtil({ userId });
+    setSuggestion(() => ({
+      data,
+      loading: false,
+      showingLikedUserProfile: true,
+    }));
   };
 
   const handleSwipe = async (event, matchedID) => {
-    if (isValidKeyCodeForSwipe(event.keyCode)) return;
-    if (
-      areSuggestionAvailable({
-        suggestionArrayLength: filteredGenderedUsers.length,
-        index,
-      })
-    )
-      return;
-    else {
-      const { displayPic, age, about, first_name, matchedID } =
-        getSanitizedSuggestion(filteredGenderedUsers[index]);
-      setSuggestion((prevState) => ({
-        ...prevState,
-        displayPic,
-        dob: calculateAge(age),
-        about,
-        first_name,
-        matchedID,
-      }));
-      setIndex((prevIndex) => prevIndex + 1);
-    }
+    const data = await handleSwipeEvent({
+      event,
+      index,
+      lengthOfSugestionArray: filteredGenderedUsers.length,
+      suggestion:
+        suggestion.showingLikedUserProfile === false
+          ? filteredGenderedUsers[index]
+          : suggestion,
+      userId: cookies.UserId,
+      matchedUserId: matchedID,
+    });
+    if (!data) return;
 
-    const filteredMatches = displayMatches.filter(
-      (match) => match.userID !== matchedID
+    const indexOfMatchProfile = displayMatches.data.findIndex(
+      ({ userID }) => userID === data.matchedID
     );
-    console.log(filteredMatches, displayMatches);
-    if (JSON.stringify(filteredMatches) !== JSON.stringify(displayMatches))
-      setDisplayMatches(filteredMatches);
+    if (indexOfMatchProfile !== -1)
+      displayMatches.data.splice(indexOfMatchProfile, 1);
 
-    if (isValidLeftSwipe(event)) {
-      console.log("You left swiped!");
-      // TODO : make a api call to handle left swipes
-    } else if (isValidRightSwipe(event)) {
-      try {
-        await axios({
-          method: "PUT",
-          url: `${SERVER_URL}/addMatch`,
-          data: { userId: cookies.UserId, matchedUserId: matchedID },
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    }
+    if (suggestion.showingLikedUserProfile === false)
+      setIndex((prevIndex) => prevIndex + 1);
+
+    setSuggestion({
+      loading: false,
+      data,
+      showingLikedUserProfile: false,
+    });
   };
 
   const handleChatClick = (inboxID) => {
@@ -287,13 +244,13 @@ export default function DashboardComponent() {
 
   useEffect(() => {
     // TODO : make a api call to fetch all the chats for the given userID
-    setDisplayChat(TEMP_CHATS_ARRAY);
+    setDisplayChat((prevState) => ({ ...prevState, data: TEMP_CHATS_ARRAY }));
   }, []);
 
   useEffect(() => {
-    if (tab === TABS.CHATS && displayChat.length > 0)
-      handleChatClick(displayChat[0].id);
-  }, [displayChat, tab]);
+    if (tab === TABS.CHATS && displayChat.data.length > 0)
+      handleChatClick(displayChat.data[0].id);
+  }, [displayChat.data, tab]);
 
   return (
     <div className="container">
@@ -308,9 +265,9 @@ export default function DashboardComponent() {
         {tab === TABS.PROFILE && (
           <ProfileDisplayContext.Provider
             value={{
-              matchedArray: displayMatches,
+              matchedArray: displayMatches.data,
               handleProfileClick: handleRenderMatch,
-              loader: viewMatchLoader,
+              loader: displayMatches.loading,
               tab: TABS.PROFILE,
             }}
           >
@@ -320,9 +277,9 @@ export default function DashboardComponent() {
         {tab === TABS.CHATS && (
           <ProfileDisplayContext.Provider
             value={{
-              matchedArray: displayChat,
+              matchedArray: displayChat.data,
               handleProfileClick: handleChatClick,
-              loader: chatLoader,
+              loader: displayChat.loading,
               tab: TABS.CHATS,
             }}
           >
@@ -332,19 +289,21 @@ export default function DashboardComponent() {
       </div>
       {tab === TABS.PROFILE && (
         <SwipeCard
-          displayPic={suggestion.displayPic}
-          name={suggestion.first_name}
-          age={suggestion.dob}
-          pronouns={suggestion.pronouns}
-          about={suggestion.about}
+          displayPic={suggestion.data.displayPic}
+          name={suggestion.data.first_name}
+          age={suggestion.data.dob}
+          pronouns={suggestion.data.pronouns}
+          about={suggestion.data.about}
           handleSwipe={handleSwipe}
-          loading={suggestionLoader}
-          matchedID={suggestion.matchedID}
+          matchedID={suggestion.data.matchedID}
+          loading={suggestion.loading}
         />
       )}
       {tab === TABS.CHATS && (
         <ChatContext.Provider value={{ ...chatsDetails }}>
-          <ChatWindow />
+          <ErrorBoundary fallback="Error">
+            <ChatWindow />
+          </ErrorBoundary>
         </ChatContext.Provider>
       )}
     </div>

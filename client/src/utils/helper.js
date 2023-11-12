@@ -1,5 +1,5 @@
 import { TABS } from "../constants/constants";
-import calculateAge from "./calculateAge";
+import calculateAge from "../utils/calculateAge";
 import {
   LEFT_ARROW_KEYCODE,
   RIGHT_ARROW_KEYCODE,
@@ -13,15 +13,15 @@ export const changeTabUtils = ({ areChatsAvailable, areChatsLoading, tab }) => {
   else return tab;
 };
 
-export const getFilteredMatches = ({ user, genderedUsers }) => {
+export const getFilteredMatches = ({ user, genderedUsers, displayMatches }) => {
   if (!user) return [];
 
   const { user_id: userID } = user;
 
-  const matchedUserIds = !user?.matches
+  const matchedUserIds = !displayMatches
     ? []
-    : user?.matches
-        .map(({ user_id }) => user_id)
+    : displayMatches
+        .map(({ userID }) => userID)
         .concat(userID)
         .filter(Boolean);
 
@@ -46,30 +46,26 @@ const getSanitizedMatches = (matches) => {
   return sanitizedMatches;
 };
 
+// TODO : checking obj fields properly
+
 export const getSanitizedSuggestion = (suggestion) => {
   const {
     first_name,
     dob,
-    dob_year,
-    dob_month,
-    dob_day,
     about,
     url = "",
     image,
-    user_id,
+    user_id = undefined,
+    matchedID = undefined,
     pronouns = "She/Her",
   } = suggestion;
   const displayPic = url.length === 0 ? image?.url : url;
-  const age = dob
-    ? dob
-    : dob_year && dob_month && dob_day
-    ? `${dob_year}-${dob_month}-${dob_day}`
-    : "";
+  const age = dob.split("-").length === 2 ? calculateAge(dob) : dob;
   return {
     displayPic,
     first_name,
-    age: calculateAge(age),
-    matchedID: user_id,
+    dob: age,
+    matchedID: user_id ?? matchedID,
     about,
     pronouns,
   };
@@ -109,13 +105,13 @@ export const handleSwipeEvent = async ({
       data: { userId, matchedUserId },
     });
   }
-  const { displayPic, age, about, first_name, matchedID, pronouns } =
-    getSanitizedSuggestion(suggestion);
+  const { displayPic, dob, about, first_name, matchedID, pronouns } =
+    getSanitizedSuggestion(suggestion.data);
 
-  return { displayPic, age, about, first_name, matchedID, pronouns };
+  return { displayPic, dob, about, first_name, matchedID, pronouns };
 };
 
-export const getAllMatches = async ({ user, userId, genderPref }) => {
+export const getAllMatches = async ({ userId, genderPref }) => {
   const { data, hasErrorOccurred } = await getAxiosCall({
     route: `/gendered-users`,
     params: { userId, gender: genderPref },

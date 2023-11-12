@@ -43,14 +43,14 @@ export default function SwipeCard({
                 width={"100%"}
                 height={"100%"}
               />
-            )  : (
+            ) : (
               <img src={displayPic} className="cover" alt="" />
             )}
           </div>
           <div className="the-back">
             {loading === true ? (
               <span>Loading...</span>
-            )  : (
+            ) : (
               <>
                 <p>
                   <strong>Name:</strong> {name}

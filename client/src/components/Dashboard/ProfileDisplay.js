@@ -51,7 +51,9 @@ export default function ProfileDisplay() {
       <ErrorBoundary fallback="Error">
         <div className="chatlist">
           {loader === true &&
-            Array.from({ length: 8 }).map(() => <ProfileElement />)}
+            Array.from({ length: 8 }).map((index) => (
+              <ProfileElement key={index} />
+            ))}
           {loader === false && filteredProfile?.length === 0 && (
             <h4>
               {tab === TABS.PROFILE
