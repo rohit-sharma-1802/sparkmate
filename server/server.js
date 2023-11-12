@@ -14,6 +14,7 @@ const fileUpload = require("express-fileupload");
 const { generateUniqueId } = require("./utils/GenerateId");
 const fs = require("fs");
 const { generateRoomId } = require("./utils/generateRoomId");
+const { isValidDate } = require("./utils/validateDate");
 
 require("dotenv").config();
 
@@ -66,6 +67,9 @@ app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
   console.log(email, password);
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({ error: "Password does not meet the criteria." });
+  }
 
   const generatedUserId = uuidv4();
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -115,7 +119,7 @@ app.post("/signup", async (req, res) => {
     };
 
     const otpExpiry = new Date();
-    otpExpiry.setMinutes(otpExpiry.getMinutes() + 5); // Set OTP expiry time to 10 minutes from now
+    otpExpiry.setMinutes(otpExpiry.getMinutes() + 5); // Set OTP expiry time to 5 minutes from now
 
     const data = {
       user_id: generatedUserId,
@@ -421,28 +425,8 @@ async function getRandomSuggestions(usersCollection, userId) {
   return randomSuggestions;
 }
 
-function isValidDate(dob) {
-  const currentDate = new Date();
-  const inputDate = new Date(dob);
-
-  if (isNaN(inputDate.getTime())) {
-    return false;
-  }
-
-  const ageDifferenceMilliseconds = currentDate - inputDate;
-  const ageInYears = ageDifferenceMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
-  console.log(ageInYears);
-  if (ageInYears >= 18) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 app.post("/user", async (req, res) => {
   const formData = req.body;
-
-  console.log(formData);
 
   // Validating gender
   if (
@@ -591,10 +575,9 @@ app.post("/message", async (req, res) => {
         },
         { returnDocument: "after" }
       );
+      // Get the last inserted message
+      const insertedMessage = updatedRoom.value.messages.slice(-1)[0]; 
 
-      const insertedMessage = updatedRoom.value.messages.slice(-1)[0]; // Get the last inserted message
-
-      // Broadcast the message to the respective room
       io.to(room_id).emit("message", {
         message: insertedMessage,
       });
@@ -615,7 +598,6 @@ app.post("/message", async (req, res) => {
 
       const insertedRoom = await chatRooms.insertOne(newRoom);
 
-      // Broadcast the message to the respective room
       io.to(room_id).emit("message", {
         message: newRoom.messages[0],
       });
