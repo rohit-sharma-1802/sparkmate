@@ -68,7 +68,9 @@ app.post("/signup", async (req, res) => {
 
   console.log(email, password);
   if (!passwordRegex.test(password)) {
-    return res.status(400).json({ error: "Password does not meet the criteria." });
+    return res
+      .status(400)
+      .json({ error: "Password does not meet the criteria." });
   }
 
   const generatedUserId = uuidv4();
@@ -254,18 +256,22 @@ app.put("/addmatch", async (req, res) => {
 
     if (hasMatchedIndex !== -1) {
       await updateMatchStatus(userId, matchedUserId);
-      res
-        .status(200)
-        .json({ success: true, message: "Match updated successfully", matched: true });
+      res.status(200).json({
+        success: true,
+        message: "Match updated successfully",
+        matched: true,
+      });
       return;
     }
 
     await addUserMatch(userId, { userId: matchedUserId, hasMatched: false });
     await addUserMatch(matchedUserId, { userId, hasMatched: false });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Match added successfully" , matched: false});
+    res.status(200).json({
+      success: true,
+      message: "Match added successfully",
+      matched: false,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -292,7 +298,6 @@ async function addUserMatch(userId, matchObject) {
   );
 }
 
-
 async function updateMatchStatus(userId, matchedUserId) {
   const db = client.db("SparkMate");
   const users = db.collection("users");
@@ -303,7 +308,7 @@ async function updateMatchStatus(userId, matchedUserId) {
     { user_id: userId, "matches.userId": matchedUserId },
     { $set: { "matches.$.hasMatched": true } }
   );
-  
+
   await users.updateOne(
     { user_id: matchedUserId, "matches.userId": userId },
     { $set: { "matches.$.hasMatched": true } }
@@ -327,14 +332,15 @@ app.post("/matches", async (req, res) => {
     }
 
     const matchDetails = await users
-      .find(
-        {
-          user_id: { $ne: userId },
-          matches: {
-            $elemMatch: { user_id: { $in: currentUser.matches.map((match) => match.user_id) }, hasMatched: true }
-          }
-        }
-      )
+      .find({
+        user_id: { $ne: userId },
+        matches: {
+          $elemMatch: {
+            user_id: { $in: currentUser.matches.map((match) => match.user_id) },
+            hasMatched: true,
+          },
+        },
+      })
       .project({
         _id: 0,
         user_id: 1,
@@ -343,7 +349,7 @@ app.post("/matches", async (req, res) => {
         gender_identity: 1,
         gender_interest: 1,
         dob: 1,
-        image: 1
+        image: 1,
       })
       .toArray();
 
@@ -355,7 +361,6 @@ app.post("/matches", async (req, res) => {
     await client.close();
   }
 });
-
 
 // Get all Users by userIds in the Database
 app.get("/users", async (req, res) => {
@@ -385,6 +390,7 @@ app.get("/users", async (req, res) => {
   }
 });
 
+// for fetching suggestions
 app.get("/gendered-users", async (req, res) => {
   const userId = req.query.userId;
   const gender = req.query.gender;
@@ -398,14 +404,41 @@ app.get("/gendered-users", async (req, res) => {
     const database = client.db("SparkMate");
     const users = database.collection("users");
 
-    if (gender === "everyone") {
-      const suggestions = await getRandomSuggestions(users, userId);
-      return res.json(suggestions);
-    }
+    const currentUserMatches = await users.findOne(
+      { user_id: userId },
+      { projection: { matches: 1 } }
+    );
 
-    const query = { gender_identity: gender, user_id: { $ne: userId } };
-    const foundUsers = await users.find(query).toArray();
-    res.json(foundUsers);
+    const excludedUserIds = currentUserMatches.matches.map(
+      (match) => match.userId
+    );
+      let foundUsers;
+    if (gender === "everyone") {
+        foundUsers = await getRandomSuggestions(
+        users,
+        userId,
+        excludedUserIds
+      );
+    }
+    else{
+      const query = {
+        gender_identity: gender,
+        user_id: { $nin: [...excludedUserIds, userId] },
+        "matches.userId": { $nin: [...excludedUserIds, userId] }, // Exclude users in matches
+      };
+      foundUsers = await users.find(query).toArray();
+    }
+    
+    const simplifiedSuggestions = foundUsers.map((user) => ({
+      user_id: user.user_id,
+      about: user.about,
+      first_name: user.first_name,
+      gender_identity: user.gender_identity,
+      dob: user.dob,
+      image: user.image,
+    }));
+
+    return res.json(simplifiedSuggestions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
@@ -414,11 +447,11 @@ app.get("/gendered-users", async (req, res) => {
   }
 });
 
-async function getRandomSuggestions(usersCollection, userId) {
+async function getRandomSuggestions(usersCollection, userId, excludedUserIds) {
   const randomSuggestions = await usersCollection
     .aggregate([
-      { $match: { user_id: { $ne: userId } } },
-      { $sample: { size: 10 } },
+      { $match: { user_id: { $nin: [...excludedUserIds, userId] } } },
+      { $sample: { size: 20 } },
     ])
     .toArray();
 
@@ -576,7 +609,7 @@ app.post("/message", async (req, res) => {
         { returnDocument: "after" }
       );
       // Get the last inserted message
-      const insertedMessage = updatedRoom.value.messages.slice(-1)[0]; 
+      const insertedMessage = updatedRoom.value.messages.slice(-1)[0];
 
       io.to(room_id).emit("message", {
         message: insertedMessage,
