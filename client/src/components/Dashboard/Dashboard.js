@@ -5,17 +5,22 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Header from "./Header";
-import ChatDisplay from "./SearchChat";
 import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
+import ProfileDisplay from "./ProfileDisplay";
 
-import {
-  ACTIONS,
-  TABS,
-  LEFT_ARROW_KEYCODE,
-  RIGHT_ARROW_KEYCODE,
-} from "../../constants/constants";
+import { TABS } from "../../constants/constants";
 import calculateAge from "../../utils/calculateAge";
+import {
+  areSuggestionAvailable,
+  changeTabUtils,
+  getFilteredMatches,
+  getSanitizedMatches,
+  getSanitizedSuggestion,
+  isValidKeyCodeForSwipe,
+  isValidLeftSwipe,
+  isValidRightSwipe,
+} from "../../utils/helper";
 
 import matchedImg1 from "../../images/img2.jpg";
 import matchedImg2 from "../../images/img3.jpg";
@@ -23,6 +28,10 @@ import matchedImg2 from "../../images/img3.jpg";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
+import {
+  ChatContext,
+  ProfileDisplayContext,
+} from "../../context/dashboardContext";
 
 const TEMP_CHATS_ARRAY = [
   {
@@ -67,10 +76,18 @@ export default function DashboardComponent() {
     matchedID: "",
   });
   const [suggestionLoader, setSuggestionLoader] = useState(true);
-  const [chatLoader, setChatLoader] = useState(true);
-
+  const [viewMatchLoader, setViewMatchLoader] = useState(true);
+  const [index, setIndex] = useState(1);
   const [tab, setTab] = useState(TABS.PROFILE);
   const [displayChat, setDisplayChat] = useState(null);
+  const [displayMatches, setDisplayMatches] = useState([
+    {
+      displayProfilePic: "",
+      displayName: "",
+      userID: null,
+    },
+  ]);
+  const [chatLoader, setChatLoader] = useState(false);
   const [chatsDetails, setChatsDetails] = useState({
     displayProfilePic: "",
     displayName: "",
@@ -78,9 +95,10 @@ export default function DashboardComponent() {
     status: "",
     userID: null,
   });
-  const [index, setIndex] = useState(1);
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
   const navigate = useNavigate();
+
+  const SERVER_URL = `http://localhost:8000`;
 
   useEffect(() => {
     if (!cookies.UserId) navigate("/");
@@ -91,7 +109,7 @@ export default function DashboardComponent() {
     try {
       const response = await axios({
         method: "GET",
-        url: "http://localhost:8000/user",
+        url: `${SERVER_URL}/user`,
         params: { userId: cookies.UserId },
       });
       setUser(response.data);
@@ -106,7 +124,7 @@ export default function DashboardComponent() {
     try {
       const response = await axios({
         method: "GET",
-        url: "http://localhost:8000/gendered-users",
+        url: `${SERVER_URL}/gendered-users`,
         params: { userId: cookies.UserId, gender: user.gender_interest },
       });
       setGenderedUsers(response.data);
@@ -126,103 +144,117 @@ export default function DashboardComponent() {
     }
   }, [cookies?.UserId, user?.gender_interest]);
 
-  const matchedUserIds = user?.matches
-    ?.map(({ user_id }) => user_id)
-    .concat(cookies.UserId)
-    .filter(Boolean);
+  const filteredGenderedUsers = getFilteredMatches({ user, genderedUsers });
 
-  const filteredGenderedUsers =
-    genderedUsers?.filter(
-      (genderedUser) => !matchedUserIds?.includes(genderedUser.user_id)
-    ) ?? [];
+  // TODO : complete this function
+
+  const getMatches = async () => {
+    setViewMatchLoader(true);
+    try {
+      if (!user) return;
+      const response = await axios({
+        method: "GET",
+        url: `${SERVER_URL}/gendered-users`,
+        params: { userId: cookies.UserId, gender: user.gender_interest },
+      });
+      const sanitizedMatches = getSanitizedMatches(response.data);
+      setDisplayMatches(sanitizedMatches);
+      setViewMatchLoader(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    getMatches();
+  }, [filteredGenderedUsers[0]]);
 
   useEffect(() => {
     if (filteredGenderedUsers.length > 0) {
-      const {
-        first_name,
-        dob,
-        dob_year,
-        dob_month,
-        dob_day,
-        about,
-        url = "",
-        image,
-        user_id,
-      } = filteredGenderedUsers[0];
-      const displayPic = url.length === 0 ? image?.url : url;
-      const age = dob
-        ? dob
-        : dob_year && dob_month && dob_day
-        ? `${dob_year}-${dob_month}-${dob_day}`
-        : "";
+      const { displayPic, age, about, first_name, matchedID } =
+        getSanitizedSuggestion(filteredGenderedUsers[0]);
       setSuggestion((prevState) => ({
         ...prevState,
         displayPic,
-        dob: calculateAge(age),
+        dob: age,
         about,
         first_name,
-        matchedID: user_id,
+        matchedID,
       }));
     }
   }, [filteredGenderedUsers[0]]);
 
   const changeTab = (event) => {
-    if (displayChat.length === 0) setTab(TABS.PROFILE);
-    else if (chatLoader === true) setTab(TABS.PROFILE);
-    else setTab(event.target.attributes.iconName?.value);
+    const chooseTab = changeTabUtils({
+      areChatsAvailable: displayChat.length,
+      areChatsLoading: chatLoader,
+      tab: event.target.attributes.iconName?.value,
+    });
+    setTab(chooseTab);
+  };
+
+  const handleRenderMatch = async (userId) => {
+    try {
+      setSuggestionLoader(true);
+      const response = await axios({
+        method: "GET",
+        url: `${SERVER_URL}/user`,
+        params: { userId },
+      });
+      const { displayPic, age, about, first_name, matchedID } =
+        getSanitizedSuggestion(response.data);
+      setSuggestion((prevState) => ({
+        ...prevState,
+        displayPic,
+        dob: age,
+        about,
+        first_name,
+        matchedID,
+      }));
+      setSuggestionLoader(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSwipe = async (event, matchedID) => {
+    if (isValidKeyCodeForSwipe(event.keyCode)) return;
     if (
-      event.keyCode &&
-      event.keyCode !== LEFT_ARROW_KEYCODE &&
-      event.keyCode !== RIGHT_ARROW_KEYCODE
+      areSuggestionAvailable({
+        suggestionArrayLength: filteredGenderedUsers.length,
+        index,
+      })
     )
       return;
-    if (filteredGenderedUsers.length === index) {
-      return;
-    } else if (filteredGenderedUsers.length === 0) return;
     else {
-      const {
-        first_name,
-        dob,
-        dob_year,
-        dob_month,
-        dob_day,
-        about,
-        url = "",
-        image,
-      } = filteredGenderedUsers[index];
-      const displayPic = url.length === 0 ? image?.url : url;
-      const age = dob
-        ? dob
-        : dob_year && dob_month && dob_day
-        ? `${dob_year}-${dob_month}-${dob_day}`
-        : "";
+      const { displayPic, age, about, first_name, matchedID } =
+        getSanitizedSuggestion(filteredGenderedUsers[index]);
       setSuggestion((prevState) => ({
         ...prevState,
         displayPic,
         dob: calculateAge(age),
         about,
         first_name,
+        matchedID,
       }));
       setIndex((prevIndex) => prevIndex + 1);
     }
 
-    if (
-      event.target.attributes.iconName?.value === ACTIONS.LEFT_SWIPE ||
-      event.keyCode === LEFT_ARROW_KEYCODE
-    ) {
+    const filteredMatches = displayMatches.filter(
+      (match) => match.userID !== matchedID
+    );
+    console.log(filteredMatches, displayMatches);
+    if (JSON.stringify(filteredMatches) !== JSON.stringify(displayMatches))
+      setDisplayMatches(filteredMatches);
+
+    if (isValidLeftSwipe(event)) {
       console.log("You left swiped!");
-      // make a api call
-    } else if (
-      event.target.attributes.iconName?.value === ACTIONS.RIGHT_SWIPE ||
-      event.keyCode === RIGHT_ARROW_KEYCODE
-    ) {
+      // TODO : make a api call to handle left swipes
+    } else if (isValidRightSwipe(event)) {
       try {
         await axios({
           method: "PUT",
-          url: "http://localhost:8000/addMatch",
+          url: `${SERVER_URL}/addMatch`,
           data: { userId: cookies.UserId, matchedUserId: matchedID },
         });
       } catch (error) {
@@ -232,7 +264,7 @@ export default function DashboardComponent() {
   };
 
   const handleChatClick = (inboxID) => {
-    // make a api call to fetch all the chats for the given inboxID
+    // TODO : make a api call to fetch all the chats for the given inboxID
     if (!inboxID) return;
     setChatsDetails({
       displayProfilePic: matchedImg1,
@@ -241,7 +273,6 @@ export default function DashboardComponent() {
       messagesArray: TEMP_MESSAGE_ARRAY,
       userID: 1,
     });
-    setTab(TABS.CHATS);
   };
 
   const handleLogOut = () => {
@@ -255,7 +286,7 @@ export default function DashboardComponent() {
   };
 
   useEffect(() => {
-    // make a api call to fetch all the chats for the given userID
+    // TODO : make a api call to fetch all the chats for the given userID
     setDisplayChat(TEMP_CHATS_ARRAY);
   }, []);
 
@@ -274,11 +305,30 @@ export default function DashboardComponent() {
           handleLogOut={handleLogOut}
           handleChangePreference={handleChangePreference}
         />
-        <ChatDisplay
-          chatsArray={displayChat}
-          handleChatClick={handleChatClick}
-          loader={chatLoader}
-        />
+        {tab === TABS.PROFILE && (
+          <ProfileDisplayContext.Provider
+            value={{
+              matchedArray: displayMatches,
+              handleProfileClick: handleRenderMatch,
+              loader: viewMatchLoader,
+              tab: TABS.PROFILE,
+            }}
+          >
+            <ProfileDisplay />
+          </ProfileDisplayContext.Provider>
+        )}
+        {tab === TABS.CHATS && (
+          <ProfileDisplayContext.Provider
+            value={{
+              matchedArray: displayChat,
+              handleProfileClick: handleChatClick,
+              loader: chatLoader,
+              tab: TABS.CHATS,
+            }}
+          >
+            <ProfileDisplay />
+          </ProfileDisplayContext.Provider>
+        )}
       </div>
       {tab === TABS.PROFILE && (
         <SwipeCard
@@ -293,14 +343,9 @@ export default function DashboardComponent() {
         />
       )}
       {tab === TABS.CHATS && (
-        <ChatWindow
-          displayProfilePic={chatsDetails.displayProfilePic}
-          displayName={chatsDetails.displayName}
-          status={chatsDetails.status}
-          messagesArray={chatsDetails.messagesArray}
-          userID={chatsDetails.userID}
-          matchedID={chatsDetails.matchedID}
-        />
+        <ChatContext.Provider value={{ ...chatsDetails }}>
+          <ChatWindow />
+        </ChatContext.Provider>
       )}
     </div>
   );

@@ -1,9 +1,12 @@
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ChatContext } from "../../context/dashboardContext";
 
-function ChatBox({ messagesArray, userID }) {
+function ChatBox() {
+  const { messagesArray, userID } = useContext(ChatContext);
+
   return (
     <div className="chatbox">
       {messagesArray?.length === 0 && <h1>Chat Now!</h1>}
@@ -29,14 +32,22 @@ function ChatBox({ messagesArray, userID }) {
   );
 }
 
-function ChatHeader({
-  displayProfilePic,
-  displayName,
-  status,
-  handleUnmatch,
-  handleDeleteChat,
-  handleReport,
-}) {
+function ChatHeader() {
+  const { displayProfilePic, displayName, status } = useContext(ChatContext);
+
+  // TODO : make api call to handle unmatch request
+  const handleUnmatch = () => {
+    console.log(`You have unmatched with ${displayName}`);
+  };
+
+  // TODO : make api call to handle delete chat request
+  const handleDeleteChat = () => {};
+
+  // TODO : make a api call to handle report user request
+  const handleReport = () => {
+    handleUnmatch();
+  };
+
   return (
     <div className="header">
       <div className="imgText">
@@ -57,22 +68,10 @@ function ChatHeader({
   );
 }
 
-export default function ChatWindow({
-  displayProfilePic,
-  displayName,
-  status,
-  messagesArray,
-  userID,
-  matchedID,
-}) {
+export default function ChatWindow() {
   const [message, setMessage] = useState("");
-  const handleUnmatch = () => {
-    console.log(`You have unmatched with ${displayName}`);
-  };
-  const handleDeleteChat = () => {};
-  const handleReport = () => {
-    handleUnmatch();
-  };
+  const { matchedID } = useContext(ChatContext);
+
   const handleAddingEmoji = () => {};
   const handleSend = () => {
     console.log("message : ", message.trim());
@@ -82,16 +81,9 @@ export default function ChatWindow({
   };
   return (
     <div className="rightSide-chatBox">
-      <ChatHeader
-        displayProfilePic={displayProfilePic}
-        displayName={displayName}
-        status={status}
-        handleUnmatch={handleUnmatch}
-        handleDeleteChat={handleDeleteChat}
-        handleReport={handleReport}
-      />
+      <ChatHeader />
       <div className="chatbox">
-        <ChatBox messagesArray={messagesArray} userID={userID} />
+        <ChatBox />
       </div>
       <div className="chat_input">
         <ion-icon name="happy-outline" onClick={handleAddingEmoji}></ion-icon>
