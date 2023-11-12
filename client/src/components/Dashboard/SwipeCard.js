@@ -16,6 +16,7 @@ export default function SwipeCard({
   handleSwipe,
   loading,
   matchedID,
+  error,
 }) {
   useEffect(() => {
     document.addEventListener("keydown", handleSwipe, false);
@@ -43,6 +44,8 @@ export default function SwipeCard({
                 width={"100%"}
                 height={"100%"}
               />
+            ) : error.isError ? (
+              <p>{error.message}</p>
             ) : (
               <img src={displayPic} className="cover" alt="" />
             )}
@@ -50,6 +53,8 @@ export default function SwipeCard({
           <div className="the-back">
             {loading === true ? (
               <span>Loading...</span>
+            ) : error.isError ? (
+              <p>{error.message}</p>
             ) : (
               <>
                 <p>

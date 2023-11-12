@@ -94,7 +94,14 @@ export const handleSwipeEvent = async ({
   matchedUserId,
 }) => {
   if (isValidKeyCodeForSwipe(event.keyCode)) return;
-  if (areSuggestionAvailable({ lengthOfSugestionArray, index })) return;
+  if (
+    areSuggestionAvailable({ lengthOfSugestionArray, index }) ||
+    !suggestion?.data
+  )
+    return {
+      isError: true,
+      message: "You have exceeded your limit! Please try again tomorrow.",
+    };
 
   if (isValidLeftSwipe(event)) {
     console.log("You left swiped!");

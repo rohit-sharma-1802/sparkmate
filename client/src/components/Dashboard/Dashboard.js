@@ -79,6 +79,7 @@ export default function DashboardComponent() {
     },
     loading: true,
     showingLikedUserProfile: false,
+    error: { isError: false, message: "" },
   });
 
   const [index, setIndex] = useState(0);
@@ -164,7 +165,8 @@ export default function DashboardComponent() {
   useEffect(() => {
     if (filteredGenderedUsers.length > 0) {
       const data = getSanitizedSuggestion(filteredGenderedUsers[0]);
-      setSuggestion(() => ({
+      setSuggestion((prevState) => ({
+        ...prevState,
         loading: false,
         data,
       }));
@@ -183,7 +185,8 @@ export default function DashboardComponent() {
   const handleRenderMatch = async (userId) => {
     setSuggestion((prevState) => ({ ...prevState, loading: true }));
     const data = await renderMatchUtil({ userId });
-    setSuggestion(() => ({
+    setSuggestion((prevState) => ({
+      ...prevState,
       data,
       loading: false,
       showingLikedUserProfile: true,
@@ -203,6 +206,15 @@ export default function DashboardComponent() {
       matchedUserId: matchedID,
     });
     if (!data) return;
+    if (data.isError) {
+      setSuggestion((prevState) => ({
+        ...prevState,
+        loading: false,
+        showingLikedUserProfile: false,
+        error: { isError: true, message: data.message },
+      }));
+      return;
+    }
 
     const indexOfMatchProfile = displayMatches.data.findIndex(
       ({ userID }) => userID === data.matchedID
@@ -213,11 +225,12 @@ export default function DashboardComponent() {
     if (suggestion.showingLikedUserProfile === false)
       setIndex((prevIndex) => prevIndex + 1);
 
-    setSuggestion({
+    setSuggestion((prevState) => ({
+      ...prevState,
       loading: false,
       data,
       showingLikedUserProfile: false,
-    });
+    }));
   };
 
   const handleChatClick = (inboxID) => {
@@ -297,6 +310,7 @@ export default function DashboardComponent() {
           handleSwipe={handleSwipe}
           matchedID={suggestion.data.matchedID}
           loading={suggestion.loading}
+          error={suggestion.error}
         />
       )}
       {tab === TABS.CHATS && (
