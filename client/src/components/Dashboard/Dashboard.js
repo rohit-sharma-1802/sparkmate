@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import useSWR from "swr";
-import axios from "axios";
 
 import Header from "./Header";
 import SwipeCard from "./SwipeCard";
@@ -14,11 +12,13 @@ import ErrorBoundary from "../ErrorBoundary";
 import { TABS } from "../../constants/constants";
 import {
   changeTabUtils,
+  getAllChats,
   getAllMatches,
   getAxiosCall,
   getFilteredMatches,
   getSanitizedSuggestion,
   handleSwipeEvent,
+  unmatchUtil,
   renderMatchUtil,
 } from "../../utils/helper";
 
@@ -27,44 +27,9 @@ import {
   ProfileDisplayContext,
 } from "../../context/dashboardContext";
 
-import matchedImg1 from "../../images/img2.jpg";
-import matchedImg2 from "../../images/img3.jpg";
-
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-
-const TEMP_CHATS_ARRAY = [
-  {
-    displayProfilePic: matchedImg1,
-    displayName: "Jhon Doe",
-    lastMessage: "How are you doing",
-    status: "active",
-    id: 1,
-  },
-  {
-    displayProfilePic: matchedImg2,
-    displayName: "Olivia",
-    lastMessage: "I just subscribed to your channel",
-    status: "unread",
-    noOfUnreadMessages: 2,
-    // status: "active",
-    id: 2,
-  },
-];
-
-const TEMP_MESSAGE_ARRAY = [
-  {
-    comment: "Hi",
-    messagedAt: "12:18",
-    userID: 1,
-  },
-  {
-    comment: "Hey",
-    messagedAt: "12:20",
-    userID: 2,
-  },
-];
 
 export default function DashboardComponent() {
   const [user, setUser] = useState(null);
@@ -145,19 +110,18 @@ export default function DashboardComponent() {
   // TODO : complete this function
 
   const getMatches = async () => {
-    setDisplayMatches((prevState) => ({ ...prevState, loading: true }));
+    setDisplayChat((prevState) => ({ ...prevState, loading: true }));
     if (!user) return;
     const data = await getAllMatches({
       userId: user.user_id,
       genderPref: user.gender_interest,
     });
-    setDisplayMatches(() => ({ data: [data[0]], loading: false }));
+    setDisplayChat(() => ({ data, loading: false }));
   };
 
   const filteredGenderedUsers = getFilteredMatches({
     user,
     genderedUsers,
-    displayMatches: displayMatches.data,
   });
 
   useEffect(() => {
@@ -175,12 +139,41 @@ export default function DashboardComponent() {
     }
   }, [filteredGenderedUsers[0]]);
 
+  const handleChatClick = async (matchedID) => {
+    if (!matchedID) return;
+    const messagesArray = await getAllChats({
+      senderID: cookies.UserId,
+      recipientID: matchedID,
+    });
+
+    const getDetails =
+      displayChat.data.find(
+        (conversations) => conversations.userID === matchedID
+      ) || {};
+
+    if (Object.keys(getDetails) === 0) return;
+
+    const { displayProfilePic, displayName, userID } = getDetails;
+
+    setChatsDetails({
+      displayProfilePic,
+      displayName,
+      status: "online",
+      messagesArray: [...messagesArray],
+      matchedID: userID,
+    });
+  };
+
   const changeTab = (event) => {
     const chooseTab = changeTabUtils({
       areChatsAvailable: displayChat.data.length,
       areChatsLoading: displayChat.loading,
       tab: event.target.attributes.iconName?.value,
     });
+    if (chooseTab === TABS.CHATS) {
+      if (displayChat.loading === true) return;
+      handleChatClick(displayChat.data[0].userID);
+    }
     setTab(chooseTab);
   };
 
@@ -193,6 +186,20 @@ export default function DashboardComponent() {
       loading: false,
       showingLikedUserProfile: true,
     }));
+  };
+
+  const handleUnMatch = async (userID) => {
+    const hasErrorOccurred = await unmatchUtil({
+      userID: cookies.UserId,
+      matchedID: userID,
+    });
+    if (hasErrorOccurred) return;
+    setDisplayChat((prevDisplayMatches) => {
+      const filteredMatches = prevDisplayMatches.data.filter(
+        (match) => match.userID !== userID
+      );
+      return { ...prevDisplayMatches, data: filteredMatches };
+    });
   };
 
   const handleSwipe = async (event, matchedID) => {
@@ -235,18 +242,6 @@ export default function DashboardComponent() {
     }));
   };
 
-  const handleChatClick = (inboxID) => {
-    // TODO : make a api call to fetch all the chats for the given inboxID
-    if (!inboxID) return;
-    setChatsDetails({
-      displayProfilePic: matchedImg1,
-      displayName: "Jhon Doe",
-      status: "online",
-      messagesArray: TEMP_MESSAGE_ARRAY,
-      matchedID: 1,
-    });
-  };
-
   const handleLogOut = () => {
     removeCookie("UserId", cookies.UserId);
     removeCookie("AuthToken", cookies.AuthToken);
@@ -259,8 +254,11 @@ export default function DashboardComponent() {
 
   useEffect(() => {
     // TODO : make a api call to fetch all the chats for the given userID
-    setDisplayChat((prevState) => ({ ...prevState, data: TEMP_CHATS_ARRAY }));
-  }, []);
+    setDisplayChat((prevState) => ({
+      ...prevState,
+      data: displayChat.data,
+    }));
+  }, [displayChat.data]);
 
   useEffect(() => {
     if (tab === TABS.CHATS && displayChat.data.length > 0)
@@ -316,7 +314,13 @@ export default function DashboardComponent() {
         />
       )}
       {tab === TABS.CHATS && (
-        <ChatContext.Provider value={{ ...chatsDetails }}>
+        <ChatContext.Provider
+          value={{
+            ...chatsDetails,
+            areChatsAvailable: displayChat.data.length,
+            handleUnMatch,
+          }}
+        >
           <ErrorBoundary fallback="Error">
             <ChatWindow />
           </ErrorBoundary>
