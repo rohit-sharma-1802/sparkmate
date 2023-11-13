@@ -66,12 +66,6 @@ app.get("/", async (req, res) => {
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(email, password);
-  if (!passwordRegex.test(password)) {
-    return res
-      .status(400)
-      .json({ error: "Password does not meet the criteria." });
-  }
 
   const generatedUserId = uuidv4();
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -81,18 +75,24 @@ app.post("/signup", async (req, res) => {
     const database = client.db("SparkMate");
     const users = database.collection("users");
 
-    const existingUser = await users.findOne({ email });
-
-    if (existingUser) {
-      return res.status(409).send("User already exists. Please login");
-    }
-
     const sanitizedEmail = email.toLowerCase();
 
     if (!validEmailDomain.test(sanitizedEmail)) {
       return res.status(400).json({
         error: "Invalid email domain. Email must end with @nitk.edu.in",
       });
+    }
+  
+    if (!passwordRegex.test(password)) {
+      return res
+        .status(400)
+        .json({ error: "Password does not meet the criteria." });
+    }
+    
+    const existingUser = await users.findOne({ sanitizedEmail });
+
+    if (existingUser) {
+      return res.status(409).send("User already exists. Please login");
     }
 
     const otp = otpGenerator.generate(6, {
@@ -412,15 +412,10 @@ app.get("/gendered-users", async (req, res) => {
     const excludedUserIds = currentUserMatches.matches.map(
       (match) => match.userId
     );
-      let foundUsers;
+    let foundUsers;
     if (gender === "everyone") {
-        foundUsers = await getRandomSuggestions(
-        users,
-        userId,
-        excludedUserIds
-      );
-    }
-    else{
+      foundUsers = await getRandomSuggestions(users, userId, excludedUserIds);
+    } else {
       const query = {
         gender_identity: gender,
         user_id: { $nin: [...excludedUserIds, userId] },
@@ -428,7 +423,7 @@ app.get("/gendered-users", async (req, res) => {
       };
       foundUsers = await users.find(query).toArray();
     }
-    
+
     const simplifiedSuggestions = foundUsers.map((user) => ({
       user_id: user.user_id,
       about: user.about,
