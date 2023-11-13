@@ -1,20 +1,22 @@
+import { useContext } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { TABS } from "../../constants/constants";
+import { ProfileDisplayContext } from "../../context/dashboardContext";
 
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
 
-export default function ChatElement({
-  handleChatClick,
-  inboxID = "",
+export default function ProfileElement({
+  ID = "",
   displayProfilePic = "",
   displayName = "",
   lastMessage = "",
   status = "",
   noOfUnreadMessages = 0,
-  loader,
 }) {
+  const { loader, tab, handleProfileClick } = useContext(ProfileDisplayContext);
   return (
     <div
       className={
@@ -24,7 +26,7 @@ export default function ChatElement({
           ? "block unread"
           : "block"
       }
-      onClick={() => handleChatClick(inboxID)}
+      onClick={() => handleProfileClick(ID)}
     >
       <div className="imgBox">
         {loader === false ? (
@@ -40,7 +42,12 @@ export default function ChatElement({
       </div>
       <div className="details">
         <div className="listHead">
-          {loader === false && <h4>{displayName}</h4>}
+          {loader === false &&
+            (tab === TABS.PROFILE ? (
+              <h5>{displayName} has been matched with you</h5>
+            ) : (
+              <h4>{displayName}</h4>
+            ))}
           {loader === true && (
             <Skeleton
               borderRadius={10}

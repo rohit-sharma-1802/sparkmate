@@ -19,6 +19,7 @@ const OnBoarding = () => {
     about: "",
     matches: [],
   });
+  const [isPresent, setIsPresent] = useState(false);
 
   let navigate = useNavigate();
 
@@ -54,6 +55,7 @@ const OnBoarding = () => {
             dob,
             matches: Array.isArray(matches) ? matches : [],
           }));
+          setIsPresent(true);
         }
       })
       .catch((error) => console.error(error));
@@ -109,6 +111,7 @@ const OnBoarding = () => {
               required={true}
               value={formData.first_name}
               onChange={handleChange}
+              disabled={isPresent}
             />
 
             <label>Date of Birth</label>
@@ -120,12 +123,43 @@ const OnBoarding = () => {
                 required={true}
                 value={formData.dob}
                 onChange={handleChange}
+                disabled={isPresent}
               />
-
-              
             </div>
 
-            {/* <label>Gender</label>
+            <label htmlFor="about">About me</label>
+            <input
+              id="about"
+              type="text"
+              name="about"
+              required={true}
+              placeholder="I like to listen music..."
+              value={formData.about}
+              onChange={handleChange}
+            />
+
+            <button className="submit" type="submit">
+              {loader ? "SUBMITTING..." : "SUBMIT"}
+            </button>
+          </section>
+
+          <section>
+            <label htmlFor="url">Profile Photo</label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              id="image"
+              onChange={handleChange}
+              required={true}
+            />
+            <div className="photo-container">
+              {formData.url && (
+                <img src={formData.url} alt="profile pic preview" />
+              )}
+            </div>
+            <br />
+            <label>Gender</label>
             <div className="multiple-input-container">
               <input
                 id="man-gender-identity"
@@ -134,6 +168,7 @@ const OnBoarding = () => {
                 value="man"
                 onChange={handleChange}
                 checked={formData.gender_identity === "man"}
+                disabled={isPresent}
               />
               <label htmlFor="man-gender-identity">Man</label>
               <input
@@ -143,6 +178,7 @@ const OnBoarding = () => {
                 value="woman"
                 onChange={handleChange}
                 checked={formData.gender_identity === "woman"}
+                disabled={isPresent}
               />
               <label htmlFor="woman-gender-identity">Woman</label>
               <input
@@ -152,21 +188,12 @@ const OnBoarding = () => {
                 value="more"
                 onChange={handleChange}
                 checked={formData.gender_identity === "more"}
+                disabled={isPresent}
               />
               <label htmlFor="more-gender-identity">More</label>
-            </div> */}
+            </div>
 
-            {/* <label htmlFor="show-gender">Show Gender on my Profile</label>
-
-                        <input
-                            id="show-gender"
-                            type="checkbox"
-                            name="show_gender"
-                            onChange={handleChange}
-                            checked={formData.show_gender}
-                        /> */}
-
-            {/* <label>Interested in</label>
+            <label>Interested in</label>
 
             <div className="multiple-input-container">
               <input
@@ -196,108 +223,7 @@ const OnBoarding = () => {
                 checked={formData.gender_interest === "everyone"}
               />
               <label htmlFor="everyone-gender-interest">Everyone</label>
-            </div> */}
-
-            <label htmlFor="about">About me</label>
-            <input
-              id="about"
-              type="text"
-              name="about"
-              required={true}
-              placeholder="I like to listen music..."
-              value={formData.about}
-              onChange={handleChange}
-            />
-
-            <button className="submit" type="submit">
-              {loader ? ( "SUBMITTING..."
-              ) : (
-                "SUBMIT"
-              )}
-            </button>
-          </section>
-
-          <section>
-            <label htmlFor="url">Profile Photo</label>
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              id="image"
-              // type="url"
-              // name="url"
-              // id="url"
-              onChange={handleChange}
-              required={true}
-            />
-            <div className="photo-container">
-              {formData.url && (
-                <img src={formData.url} alt="profile pic preview" />
-              )}
             </div>
-            <br />
-            <label>Gender</label>
-            <div className="multiple-input-container">
-              <input
-                id="man-gender-identity"
-                type="radio"
-                name="gender_identity"
-                value="man"
-                onChange={handleChange}
-                checked={formData.gender_identity === "man"}
-              />
-              <label htmlFor="man-gender-identity">Man</label>
-              <input
-                id="woman-gender-identity"
-                type="radio"
-                name="gender_identity"
-                value="woman"
-                onChange={handleChange}
-                checked={formData.gender_identity === "woman"}
-              />
-              <label htmlFor="woman-gender-identity">Woman</label>
-              <input
-                id="more-gender-identity"
-                type="radio"
-                name="gender_identity"
-                value="more"
-                onChange={handleChange}
-                checked={formData.gender_identity === "more"}
-              />
-              <label htmlFor="more-gender-identity">More</label>
-            </div>
-
-            <label>Interested in</label>
-
-<div className="multiple-input-container">
-  <input
-    id="man-gender-interest"
-    type="radio"
-    name="gender_interest"
-    value="man"
-    onChange={handleChange}
-    checked={formData.gender_interest === "man"}
-  />
-  <label htmlFor="man-gender-interest">Man</label>
-  <input
-    id="woman-gender-interest"
-    type="radio"
-    name="gender_interest"
-    value="woman"
-    onChange={handleChange}
-    checked={formData.gender_interest === "woman"}
-  />
-  <label htmlFor="woman-gender-interest">Woman</label>
-  <input
-    id="everyone-gender-interest"
-    type="radio"
-    name="gender_interest"
-    value="everyone"
-    onChange={handleChange}
-    checked={formData.gender_interest === "everyone"}
-  />
-  <label htmlFor="everyone-gender-interest">Everyone</label>
-</div>
 
             {/* <ImageUpload /> */}
           </section>
