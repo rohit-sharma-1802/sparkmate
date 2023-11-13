@@ -13,25 +13,9 @@ export const changeTabUtils = ({ areChatsAvailable, areChatsLoading, tab }) => {
   else return tab;
 };
 
-export const getFilteredMatches = ({ user, genderedUsers, displayMatches }) => {
+export const getFilteredMatches = ({ user, genderedUsers }) => {
   if (!user) return [];
-
-  const { user_id: userID } = user;
-
-  const matchedUserIds =
-    !displayMatches || displayMatches.length === 0
-      ? []
-      : displayMatches
-          .map(({ userID }) => userID)
-          .concat(userID)
-          .filter(Boolean);
-
-  const filteredGenderedUsers =
-    genderedUsers?.filter(
-      (genderedUser) => !matchedUserIds?.includes(genderedUser.user_id)
-    ) ?? [];
-
-  return filteredGenderedUsers;
+  return genderedUsers;
 };
 
 const getSanitizedMatches = (matches) => {
@@ -121,20 +105,65 @@ export const handleSwipeEvent = async ({
 
 export const getAllMatches = async ({ userId, genderPref }) => {
   const { data, hasErrorOccurred } = await getAxiosCall({
-    route: `/gendered-users`,
-    params: { userId, gender: genderPref },
+    route: `/matches`,
+    params: { userId },
   });
+
+  if (hasErrorOccurred === true)
+    return [{ displayProfilePic: "", displayName: "", userID: null }];
+
+  const filteredMatches = data.filter((match) => match.user_id !== userId);
+
   return !hasErrorOccurred
-    ? getSanitizedMatches(data)
+    ? getSanitizedMatches(filteredMatches)
     : [{ displayProfilePic: "", displayName: "", userID: null }];
 };
 
-export const formattedTime = (params) =>
-  new Date(params).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
+export const getAllChats = async ({ senderID, recipientID }) => {
+  if (senderID === recipientID) return [];
+  const { data, hasErrorOccurred } = await getAxiosCall({
+    route: `/messages`,
+    params: { from_userId: senderID, to_userId: recipientID },
   });
+  return !hasErrorOccurred ? data : [];
+};
+
+export const unmatchUtil = async ({ userID, matchedID }) => {
+  if (userID === matchedID) return;
+  const { hasErrorOccurred } = await putAxiosCall({
+    route: `/unmatch`,
+    data: { userId: userID, matchedUserId: matchedID },
+  });
+  return hasErrorOccurred;
+};
+
+export const formattedTime = (params) => {
+  const inputDate = new Date(params);
+  const now = new Date();
+
+  const isToday = inputDate.toDateString() === now.toDateString();
+  const isYesterday =
+    inputDate.toDateString() === new Date(now - 864e5).toDateString();
+
+  return isToday
+    ? `Today, ${inputDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`
+    : isYesterday
+    ? `Yesterday, ${inputDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })}`
+    : `${inputDate.getDate()}/${
+        inputDate.getMonth() + 1
+      }/${inputDate.getFullYear()}`;
+};
+
+export const formattedName = (params) =>
+  params.charAt(0).toUpperCase().concat(params.slice(1));
 
 export const renderMatchUtil = async ({ userId }) => {
   const { data, hasErrorOccurred } = await getAxiosCall({
