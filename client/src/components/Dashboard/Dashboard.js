@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import useSWR from "swr";
+import axios from "axios";
 
 import Header from "./Header";
 import SwipeCard from "./SwipeCard";
@@ -145,7 +147,10 @@ export default function DashboardComponent() {
   const getMatches = async () => {
     setDisplayMatches((prevState) => ({ ...prevState, loading: true }));
     if (!user) return;
-    const data = await getAllMatches({ userId: user.user_id });
+    const data = await getAllMatches({
+      userId: user.user_id,
+      genderPref: user.gender_interest,
+    });
     setDisplayMatches(() => ({ data: [data[0]], loading: false }));
   };
 

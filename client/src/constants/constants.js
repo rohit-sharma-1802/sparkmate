@@ -10,3 +10,4 @@ export const TABS = Object.freeze({
 
 export const LEFT_ARROW_KEYCODE = 37;
 export const RIGHT_ARROW_KEYCODE = 39;
+export const ENTER_KEYCODE = 13;

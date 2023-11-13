@@ -18,12 +18,13 @@ export const getFilteredMatches = ({ user, genderedUsers, displayMatches }) => {
 
   const { user_id: userID } = user;
 
-  const matchedUserIds = !displayMatches
-    ? []
-    : displayMatches
-        .map(({ userID }) => userID)
-        .concat(userID)
-        .filter(Boolean);
+  const matchedUserIds =
+    !displayMatches || displayMatches.length === 0
+      ? []
+      : displayMatches
+          .map(({ userID }) => userID)
+          .concat(userID)
+          .filter(Boolean);
 
   const filteredGenderedUsers =
     genderedUsers?.filter(
@@ -118,15 +119,22 @@ export const handleSwipeEvent = async ({
   return { displayPic, dob, about, first_name, matchedID, pronouns };
 };
 
-export const getAllMatches = async ({ userId }) => {
-  const { data, hasErrorOccurred } = await postAxiosCall({
-    route: `/matches`,
-    postData: { userId },
+export const getAllMatches = async ({ userId, genderPref }) => {
+  const { data, hasErrorOccurred } = await getAxiosCall({
+    route: `/gendered-users`,
+    params: { userId, gender: genderPref },
   });
   return !hasErrorOccurred
     ? getSanitizedMatches(data)
     : [{ displayProfilePic: "", displayName: "", userID: null }];
 };
+
+export const formattedTime = (params) =>
+  new Date(params).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
 
 export const renderMatchUtil = async ({ userId }) => {
   const { data, hasErrorOccurred } = await getAxiosCall({
