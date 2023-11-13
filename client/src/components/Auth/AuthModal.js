@@ -19,7 +19,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
   const [otpValue, setOTPValue] = useState("");
   const [otpLoader, setOtpLoader] = useState(false);
   const [verifyOTPLoader, setVerifyOTPLoader] = useState(false);
-
+  const validEmailDomain = /@nitk\.edu\.in$/;
   let navigate = useNavigate();
 
   const handleClick = () => {
@@ -28,6 +28,11 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
 
   const otpVerifier = async (e) => {
     e.preventDefault();
+    const sanitizedEmail = email.toLowerCase();
+    if (!validEmailDomain.test(sanitizedEmail)) {
+      setError("Invalid email domain. Email must end with @nitk.edu.in");
+      return;
+    }
     if (isSignUp && password !== confirmPassword) {
       setError("Passwords need to match!");
       return;
@@ -51,13 +56,13 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
     }
     setError("");
     setOtpLoader(true);
-  
+
     try {
       const response = await axios.post(`http://localhost:8000/signup`, {
         email,
         password,
       });
-  
+
       const success = response.status === 201;
       if (success && isSignUp) {
         setPassword("");
@@ -73,17 +78,17 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
       setOtpLoader(false);
     }
   };
-  
+
   const checkOTP = async (e) => {
     e.preventDefault();
     setVerifyOTPLoader(true);
-  
+
     try {
       const verifyOTP = await axios.post(`http://localhost:8000/verifyUser`, {
         email,
         otpValue,
       });
-  
+
       const success = verifyOTP.status === 200;
       if (success && isSignUp) {
         setCookie("AuthToken", verifyOTP.data.token);
@@ -99,7 +104,6 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
       setVerifyOTPLoader(false);
     }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,18 +138,18 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
         `http://localhost:8000/${isSignUp ? "signup" : "login"}`,
         { email, password }
       );
-  
+
       setCookie("AuthToken", response.data.token);
       setCookie("UserId", response.data.userId);
-  
+
       const success = response.status === 201;
       if (success && isSignUp) navigate("/onboarding");
       if (success && !isSignUp) navigate("/dashboard");
-  
+
       window.location.reload();
     } catch (error) {
       console.error("Error logging in or signing up:", error);
-  
+
       if (error.response && error.response.status === 400) {
         setError("Invalid email or password. Please try again.");
       } else {
@@ -193,11 +197,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
             />
           )}
           <button className="secondary-button" type="submit">
-            {otpLoader ? (
-              "SENDING OTP..."
-            ) : (
-              "SEND OTP"
-            )}
+            {otpLoader ? "SENDING OTP..." : "SEND OTP"}
           </button>
           <p>{error}</p>
         </form>
@@ -221,11 +221,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
             onChange={(e) => setOTPValue(e.target.value)}
           />
           <button className="secondary-button" type="submit">
-            {verifyOTPLoader ? (
-              "VERIFYING..."
-            ) : (
-              "VERIFY"
-            )}
+            {verifyOTPLoader ? "VERIFYING..." : "VERIFY"}
           </button>
           <p>{error}</p>
         </form>

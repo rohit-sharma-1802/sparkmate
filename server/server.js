@@ -408,7 +408,7 @@ app.get("/gendered-users", async (req, res) => {
       { user_id: userId },
       { projection: { matches: 1 } }
     );
-
+    
     const excludedUserIds = currentUserMatches.matches.map(
       (match) => match.userId
     );
@@ -543,6 +543,45 @@ app.post("/user", async (req, res) => {
     await client.close();
   }
 });
+
+// Unmatch a user
+app.put("/unmatch", async (req, res) => {
+  const { userId, matchedUserId } = req.body;
+  const room_id = generateRoomId(userId, matchedUserId);
+
+  try {
+    await client.connect();
+    const database = client.db("SparkMate");
+    const users = database.collection("users");
+    const chatRooms = database.collection("chatRooms");
+
+    // Update the current user's matches array to remove the matched user
+    await users.updateOne(
+      { user_id: userId },
+      { $pull: { matches: { userId: matchedUserId } } }
+    );
+
+    // Update the matched user's matches array to remove the current user
+    await users.updateOne(
+      { user_id: matchedUserId },
+      { $pull: { matches: { userId: userId } } }
+    );
+
+    // Delete the chatroom
+    const existingRoom = await chatRooms.findOne({ room_id });
+    if(existingRoom){
+      await rooms.deleteOne({ room_id });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
+});
+
 
 // Get Messages by Room ID
 app.get("/messages", async (req, res) => {

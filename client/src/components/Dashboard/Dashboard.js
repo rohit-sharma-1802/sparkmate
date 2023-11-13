@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useContext } from "react";
 import Header from "./Header";
-import ChatDisplay from "./SearchChat";
 import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
 import io from "socket.io-client";
@@ -75,7 +74,16 @@ export default function DashboardComponent() {
   const [matchId, setMatchId] = useState(null);
 
   const [tab, setTab] = useState(TABS.PROFILE);
-  const [displayChat, setDisplayChat] = useState(null);
+
+  const [displayChat, setDisplayChat] = useState({
+    data: [{ displayProfilePic: "", displayName: "", userID: null }],
+    loading: false,
+  });
+  const [displayMatches, setDisplayMatches] = useState({
+    data: [{ displayProfilePic: "", displayName: "", userID: null }],
+    loading: true,
+  });
+
   const [chatsDetails, setChatsDetails] = useState({
     displayProfilePic: "",
     displayName: "",
@@ -201,7 +209,7 @@ export default function DashboardComponent() {
         image,
       } = filteredGenderedUsers[index];
       const displayPic = url.length === 0 ? image?.url : url;
-      const age = dob
+      const age = dobookies, 
         ? dob
         : dob_year && dob_month && dob_day
         ? `${dob_year}-${dob_month}-${dob_day}`
@@ -254,8 +262,6 @@ export default function DashboardComponent() {
       messagesArray: TEMP_MESSAGE_ARRAY,
       userID: 1,
     });
-    setTab(TABS.CHATS);
-    
   };
 
   const handleLogOut = () => {
@@ -269,26 +275,14 @@ export default function DashboardComponent() {
   };
 
   useEffect(() => {
-    if(isFetched)
-    {
-      axios.get(`http://localhost:8000/${matchId}`)
-      .then((res)=>{
-        console.log(res.data);
-        setDisplayChat(TEMP_CHATS_ARRAY);
-        setIsFetched(false);
-
-      })
-      .catch((err)=>{
-
-      })
-    }
-    // make a api call to fetch all the chats for the given userID
-  }, [isFetched]);
+    // TODO : make a api call to fetch all the chats for the given userID
+    setDisplayChat((prevState) => ({ ...prevState, data: TEMP_CHATS_ARRAY }));
+  }, []);
 
   useEffect(() => {
-    if (tab === TABS.CHATS && displayChat.length > 0)
-      handleChatClick(displayChat[0].id);
-  }, [displayChat, tab]);
+    if (tab === TABS.CHATS && displayChat.data.length > 0)
+      handleChatClick(displayChat.data[0].id);
+  }, [displayChat.data, tab]);
 
   return (
     <div className="container">
@@ -300,33 +294,50 @@ export default function DashboardComponent() {
           handleLogOut={handleLogOut}
           handleChangePreference={handleChangePreference}
         />
-        <ChatDisplay
-          chatsArray={displayChat}
-          handleChatClick={handleChatClick}
-          loader={chatLoader}
-        />
+        {tab === TABS.PROFILE && (
+          <ProfileDisplayContext.Provider
+            value={{
+              matchedArray: displayMatches.data,
+              handleProfileClick: handleRenderMatch,
+              loader: displayMatches.loading,
+              tab: TABS.PROFILE,
+            }}
+          >
+            <ProfileDisplay />
+          </ProfileDisplayContext.Provider>
+        )}
+        {tab === TABS.CHATS && (
+          <ProfileDisplayContext.Provider
+            value={{
+              matchedArray: displayChat.data,
+              handleProfileClick: handleChatClick,
+              loader: displayChat.loading,
+              tab: TABS.CHATS,
+            }}
+          >
+            <ProfileDisplay />
+          </ProfileDisplayContext.Provider>
+        )}
       </div>
       {tab === TABS.PROFILE && (
         <SwipeCard
-          displayPic={suggestion.displayPic}
-          name={suggestion.first_name}
-          age={suggestion.dob}
-          pronouns={suggestion.pronouns}
-          about={suggestion.about}
+          displayPic={suggestion.data.displayPic}
+          name={suggestion.data.first_name}
+          age={suggestion.data.dob}
+          pronouns={suggestion.data.pronouns}
+          about={suggestion.data.about}
           handleSwipe={handleSwipe}
-          loading={suggestionLoader}
-          matchedID={suggestion.matchedID}
+          matchedID={suggestion.data.matchedID}
+          loading={suggestion.loading}
+          error={suggestion.error}
         />
       )}
       {tab === TABS.CHATS && (
-        <ChatWindow
-          displayProfilePic={chatsDetails.displayProfilePic}
-          displayName={chatsDetails.displayName}
-          status={chatsDetails.status}
-          messagesArray={chatsDetails.messagesArray}
-          userID={chatsDetails.userID}
-          matchedID={chatsDetails.matchedID}
-        />
+        <ChatContext.Provider value={{ ...chatsDetails }}>
+          <ErrorBoundary fallback="Error">
+            <ChatWindow />
+          </ErrorBoundary>
+        </ChatContext.Provider>
       )}
     </div>
   );

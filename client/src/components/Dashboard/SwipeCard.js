@@ -14,8 +14,6 @@ export default function SwipeCard({
   pronouns,
   about,
   handleSwipe,
-  loading,
-  matchedID,
 }) {
   useEffect(() => {
     document.addEventListener("keydown", handleSwipe, false);
@@ -36,36 +34,21 @@ export default function SwipeCard({
       <div className="person-card">
         <div className="the-card">
           <div className="the-front">
-            {loading === true ? (
-              <Skeleton
-                box={true}
-                baseColor="#C0C0C0"
-                width={"100%"}
-                height={"100%"}
-              />
-            )  : (
-              <img src={displayPic} className="cover" alt="" />
-            )}
+            <img src={displayPic} className="cover" alt="" />
           </div>
           <div className="the-back">
-            {loading === true ? (
-              <span>Loading...</span>
-            )  : (
-              <>
-                <p>
-                  <strong>Name:</strong> {name}
-                </p>
-                <p>
-                  <strong>Age:</strong> {age}
-                </p>
-                <p>
-                  <strong>I would describe myself as:</strong> {pronouns}
-                </p>
-                <p>
-                  <strong>About me:</strong> {about}
-                </p>
-              </>
-            )}
+            <p>
+              <strong>Name:</strong> {name}
+            </p>
+            <p>
+              <strong>Age:</strong> {age}
+            </p>
+            <p>
+              <strong>I would describe myself as:</strong> {pronouns}
+            </p>
+            <p>
+              <strong>About me:</strong> {about}
+            </p>
           </div>
         </div>
       </div>

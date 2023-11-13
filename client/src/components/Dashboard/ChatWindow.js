@@ -1,18 +1,24 @@
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ChatContext } from "../../context/dashboardContext";
+import ErrorBoundary from "../ErrorBoundary";
 import io from "socket.io-client"
-import { Cookies, useCookies } from "react-cookie";
+import { useCookies } from "react-cookie";
 import axios from "axios"
 const socket=io.connect("http://localhost:8000");
 
-function ChatBox({ messagesArray, userID }) {
+function ChatBox() {
+  const { messagesArray, userID } = useContext(ChatContext);
+
   console.log(messagesArray)
+  
   socket.on("message-from-server",(data)=>{
     messagesArray=[...messagesArray,data];
    
   })
+
   return (
     <div className="chatbox" >
       {messagesArray?.length === 0 && <h1>Chat Now!</h1>}
@@ -42,14 +48,22 @@ function ChatBox({ messagesArray, userID }) {
   );
 }
 
-function ChatHeader({
-  displayProfilePic,
-  displayName,
-  status,
-  handleUnmatch,
-  handleDeleteChat,
-  handleReport,
-}) {
+function ChatHeader() {
+  const { displayProfilePic, displayName, status } = useContext(ChatContext);
+
+  // TODO : make api call to handle unmatch request
+  const handleUnmatch = () => {
+    console.log(`You have unmatched with ${displayName}`);
+  };
+
+  // TODO : make api call to handle delete chat request
+  const handleDeleteChat = () => {};
+
+  // TODO : make a api call to handle report user request
+  const handleReport = () => {
+    handleUnmatch();
+  };
+
   return (
     <div className="header">
       <div className="imgText">
@@ -69,23 +83,12 @@ function ChatHeader({
     </div>
   );
 }
-
-export default function ChatWindow({
-  displayProfilePic,
-  displayName,
-  status,
-  userID,
-  matchedID,
-}) {
+  
+export default function ChatWindow() {
   const [message, setMessage] = useState("");
+  const { matchedID } = useContext(ChatContext);
   const [cookie] = useCookies(["user"])
-  const handleUnmatch = () => {
-    console.log(`You have unmatched with ${displayName}`);
-  };
-  const handleDeleteChat = () => {};
-  const handleReport = () => {
-    handleUnmatch();
-  };
+
   const handleAddingEmoji = () => {};
   
 const [messagesArray,setmessagesArray]=useState([])
@@ -104,17 +107,12 @@ socket.emit("message",message,cookie.UserId)
   console.log(messagesArray)
   return (
     <div className="rightSide-chatBox">
-      <ChatHeader
-        displayProfilePic={displayProfilePic}
-        displayName={displayName}
-        status={status}
-        handleUnmatch={handleUnmatch}
-        handleDeleteChat={handleDeleteChat}
-        handleReport={handleReport}
-      />
-      <div className="chatbox">
-        <ChatBox messagesArray={messagesArray} userID={userID} />
-      </div>
+      <ChatHeader />
+      <ErrorBoundary fallback="Error">
+        <div className="chatbox">
+          <ChatBox />
+        </div>
+      </ErrorBoundary>
       <div className="chat_input">
         <ion-icon name="happy-outline" onClick={handleAddingEmoji}></ion-icon>
         <input
