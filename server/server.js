@@ -41,13 +41,10 @@ app.use(express.json());
 app.use(fileUpload());
 
 io.on("connection", (socket) => {
-  socket.on("message", (data, cokie) => {
-    const timeStp = new Date();
-    const mes = data;
-    const from_user_Id = cokie;
-    console.log(data, from_user_Id);
-    const combine = { timeStp, mes, from_user_Id };
-    socket.emit("message-from-server", combine);
+  socket.on("message", (message, senderUserId) => {
+    const timestamp = new Date();
+    const data = { timestamp, message, senderUserId };
+    socket.emit("message-from-server", data);
   });
 });
 
@@ -66,7 +63,6 @@ app.get("/", async (req, res) => {
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(email, password);
   if (!passwordRegex.test(password)) {
     return res
       .status(400)
@@ -161,13 +157,11 @@ app.post("/signup", async (req, res) => {
 //Verify user
 app.post("/verifyUser", async (req, res) => {
   const { email, otpValue } = req.body;
-  console.log(email + " " + otpValue);
   try {
     await client.connect();
     const database = client.db("SparkMate");
     const users = database.collection("users");
     const user = await users.findOne({ email, otp: otpValue });
-    console.log(user);
     if (user) {
       await users.updateOne({ email }, { $unset: { otp: 1, otp_expiry: 1 } });
 
@@ -206,8 +200,6 @@ app.post("/login", async (req, res) => {
       password,
       user.hashed_password
     );
-
-    console.log("in login module");
 
     if (user && correctPassword) {
       const token = jwt.sign(user, email, {
@@ -302,8 +294,6 @@ async function updateMatchStatus(userId, matchedUserId) {
   const db = client.db("SparkMate");
   const users = db.collection("users");
 
-  console.log("Updating matches for:", userId, matchedUserId);
-
   await users.updateOne(
     { user_id: userId, "matches.userId": matchedUserId },
     { $set: { "matches.$.hasMatched": true } }
@@ -326,7 +316,7 @@ app.post("/matches", async (req, res) => {
     const users = database.collection("users");
 
     const currentUser = await users.findOne({ user_id: userId });
-
+    console.log(currentUser);
     if (!currentUser) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -355,7 +345,7 @@ app.post("/matches", async (req, res) => {
 
     res.json(matchDetails);
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
     res.status(500).json({ error: "Internal Server Error" });
   } finally {
     await client.close();
@@ -409,9 +399,10 @@ app.get("/gendered-users", async (req, res) => {
       { projection: { matches: 1 } }
     );
 
-    const excludedUserIds = currentUserMatches.matches.map(
-      (match) => match.userId
-    );
+    const excludedUserIds = Array.isArray(currentUserMatches.matches)
+      ? currentUserMatches.matches.map((match) => match.userId)
+      : [];
+
     let foundUsers;
     if (gender === "everyone") {
       foundUsers = await getRandomSuggestions(users, userId, excludedUserIds);
@@ -533,8 +524,6 @@ app.post("/user", async (req, res) => {
     const options = { upsert: true };
 
     const insertedUser = await users.updateOne(query, updateDocument, options);
-
-    console.log(insertedUser);
 
     res.json(insertedUser);
   } catch (err) {

@@ -18,7 +18,8 @@
     "react-tinder-card": "^1.6.3",
     "styled-components": "^6.1.0",
     "swr": "^2.2.4",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "socket.io-client": "^4.7.2"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -99,7 +99,7 @@ export default function DashboardComponent() {
     displayName: "",
     messagesArray: [],
     status: "",
-    userID: null,
+    matchedID: null,
   });
 
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
@@ -145,10 +145,7 @@ export default function DashboardComponent() {
   const getMatches = async () => {
     setDisplayMatches((prevState) => ({ ...prevState, loading: true }));
     if (!user) return;
-    const data = await getAllMatches({
-      userId: user.user_id,
-      genderPref: user.gender_interest,
-    });
+    const data = await getAllMatches({ userId: user.user_id });
     setDisplayMatches(() => ({ data: [data[0]], loading: false }));
   };
 
@@ -241,7 +238,7 @@ export default function DashboardComponent() {
       displayName: "Jhon Doe",
       status: "online",
       messagesArray: TEMP_MESSAGE_ARRAY,
-      userID: 1,
+      matchedID: 1,
     });
   };
 

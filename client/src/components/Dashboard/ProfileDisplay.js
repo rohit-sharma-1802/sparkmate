@@ -68,6 +68,7 @@ export default function ProfileDisplay() {
                 profile.displayName.charAt(0).toUpperCase() +
                 profile.displayName.slice(1);
               return (
+                
                 <ProfileElement
                   key={profile.id}
                   displayProfilePic={profile.displayProfilePic}
