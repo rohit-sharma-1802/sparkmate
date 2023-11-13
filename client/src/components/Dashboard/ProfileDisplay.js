@@ -21,7 +21,11 @@ export default function ProfileDisplay() {
   };
 
   useEffect(() => {
-    if (matchedArray.length === 1 && !matchedArray[0].userID) return;
+    if (
+      matchedArray.length === 1 &&
+      (!matchedArray[0] || !matchedArray[0].userID)
+    )
+      return;
     if (searchText.length === 0) setFilteredProfile(matchedArray);
     else {
       const profiles = matchedArray?.filter((chat) =>
@@ -68,9 +72,8 @@ export default function ProfileDisplay() {
                 profile.displayName.charAt(0).toUpperCase() +
                 profile.displayName.slice(1);
               return (
-                
                 <ProfileElement
-                  key={profile.id}
+                  key={profile.userID}
                   displayProfilePic={profile.displayProfilePic}
                   displayName={displayName}
                   ID={profile.userID}

@@ -7,6 +7,7 @@ import { ProfileDisplayContext } from "../../context/dashboardContext";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
+import { formattedName } from "../../utils/helper";
 
 export default function ProfileElement({
   ID = "",
@@ -44,9 +45,9 @@ export default function ProfileElement({
         <div className="listHead">
           {loader === false &&
             (tab === TABS.PROFILE ? (
-              <h5>{displayName} has been matched with you</h5>
+              <h5>{formattedName(displayName)} has been matched with you</h5>
             ) : (
-              <h4>{displayName}</h4>
+              <h4>{formattedName(displayName)}</h4>
             ))}
           {loader === true && (
             <Skeleton

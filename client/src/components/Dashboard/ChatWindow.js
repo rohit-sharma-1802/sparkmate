@@ -1,10 +1,14 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import io from "socket.io-client";
 
 import { ChatContext } from "../../context/dashboardContext";
 import ErrorBoundary from "../ErrorBoundary";
-import { postAxiosCall, formattedTime } from "../../utils/helper";
+import {
+  postAxiosCall,
+  formattedTime,
+  formattedName,
+} from "../../utils/helper";
 
 import "./style/index.css";
 import "./style/swipeCard.css";
@@ -14,10 +18,13 @@ import { ENTER_KEYCODE } from "../../constants/constants";
 const socket = io.connect("http://localhost:8000");
 
 function ChatBox() {
-  const { messagesArray, userID } = useContext(ChatContext);
-  const [updatedMessageArray, setUpdatedMessageArray] = useState([
-    ...messagesArray,
-  ]);
+  const { messagesArray } = useContext(ChatContext);
+  const [updatedMessageArray, setUpdatedMessageArray] = useState([]);
+  const [cookies] = useCookies(["user"]);
+
+  useEffect(() => {
+    setUpdatedMessageArray(messagesArray);
+  }, [messagesArray]);
 
   socket.on("message-from-server", (data) => {
     setUpdatedMessageArray([...updatedMessageArray, data]);
@@ -27,12 +34,12 @@ function ChatBox() {
     <>
       {updatedMessageArray?.length > 0 &&
         updatedMessageArray?.map((message, index) => {
-          const { message: comment, timestamp, senderUserId: id } = message;
+          const { message: comment, timestamp, from_userId: id } = message;
           return (
             <div
               key={index}
               className={
-                id === userID ? "message my_msg" : "message friend_msg"
+                id === cookies.UserId ? "message my_msg" : "message friend_msg"
               }
             >
               <p>
@@ -48,17 +55,8 @@ function ChatBox() {
 }
 
 function ChatHeader() {
-  const { displayProfilePic, displayName } = useContext(ChatContext);
-
-  // TODO : make api call to handle unmatch request
-  const handleUnmatch = () => {
-    console.log(`You have unmatched with ${displayName}`);
-  };
-
-  // TODO : make a api call to handle report user request
-  const handleReport = () => {
-    handleUnmatch();
-  };
+  const { displayProfilePic, displayName, matchedID, handleUnMatch } =
+    useContext(ChatContext);
 
   return (
     <div className="header">
@@ -66,11 +64,14 @@ function ChatHeader() {
         <div className="userimg">
           <img src={displayProfilePic} alt="" className="cover" />
         </div>
-        <h4>{displayName}</h4>
+        <h4>{formattedName(displayName)}</h4>
       </div>
       <ul className="nav_icons">
         <li>
-          <ion-icon name="ellipsis-vertical"></ion-icon>
+          <ion-icon
+            name="ellipsis-vertical"
+            onClick={() => handleUnMatch(matchedID)}
+          ></ion-icon>
         </li>
       </ul>
     </div>
@@ -79,7 +80,7 @@ function ChatHeader() {
 
 export default function ChatWindow() {
   const [message, setMessage] = useState("");
-  const { matchedID } = useContext(ChatContext);
+  const { matchedID, areChatsAvailable } = useContext(ChatContext);
   const [cookie] = useCookies(["user"]);
 
   const handleAddingEmoji = (event, emoji = "💖") => {
@@ -120,26 +121,28 @@ export default function ChatWindow() {
 
   return (
     <div className="rightSide-chatBox">
-      <ChatHeader />
+      {areChatsAvailable > 0 && <ChatHeader />}
       <ErrorBoundary fallback="Error">
         <div className="chatbox">
           <ChatBox />
         </div>
       </ErrorBoundary>
-      <div className="chat_input">
-        <ion-icon
-          name="happy-outline"
-          onClick={(event, emoji) => handleAddingEmoji(event, emoji)}
-        ></ion-icon>
-        <input
-          type="text"
-          placeholder="Type a message"
-          value={message}
-          onChange={handleTyping}
-          onKeyDown={handleSendOnKeyPress}
-        />
-        <ion-icon name="send-outline" onClick={handleSend}></ion-icon>
-      </div>
+      {areChatsAvailable > 0 && (
+        <div className="chat_input">
+          <ion-icon
+            name="happy-outline"
+            onClick={(event, emoji) => handleAddingEmoji(event, emoji)}
+          ></ion-icon>
+          <input
+            type="text"
+            placeholder="Type a message"
+            value={message}
+            onChange={handleTyping}
+            onKeyDown={handleSendOnKeyPress}
+          />
+          <ion-icon name="send-outline" onClick={handleSend}></ion-icon>
+        </div>
+      )}
     </div>
   );
 }
