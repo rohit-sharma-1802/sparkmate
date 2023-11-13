@@ -351,8 +351,8 @@ app.post("/matches", async (req, res) => {
         image: 1,
       })
       .toArray();
-
-    res.json(matchDetails);
+      console.log(matchDetails);
+    return res.json(matchDetails);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -584,7 +584,7 @@ app.put("/unmatch", async (req, res) => {
 
 // Get Messages by Room ID
 app.get("/messages", async (req, res) => {
-  const { from_userId, to_userId } = req.body;
+  const { from_userId, to_userId } = req.query;
   const room_id = generateRoomId(from_userId, to_userId);
 
   try {
