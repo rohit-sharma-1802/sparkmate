@@ -18,12 +18,13 @@ export const getFilteredMatches = ({ user, genderedUsers, displayMatches }) => {
 
   const { user_id: userID } = user;
 
-  const matchedUserIds = !displayMatches
-    ? []
-    : displayMatches
-        .map(({ userID }) => userID)
-        .concat(userID)
-        .filter(Boolean);
+  const matchedUserIds =
+    !displayMatches || displayMatches.length === 0
+      ? []
+      : displayMatches
+          .map(({ userID }) => userID)
+          .concat(userID)
+          .filter(Boolean);
 
   const filteredGenderedUsers =
     genderedUsers?.filter(
@@ -60,7 +61,7 @@ export const getSanitizedSuggestion = (suggestion) => {
     pronouns = "She/Her",
   } = suggestion;
   const displayPic = url.length === 0 ? image?.url : url;
-  const age = dob.split("-").length === 2 ? calculateAge(dob) : dob;
+  const age = dob.split("-").length === 3 ? calculateAge(dob) : dob;
   return {
     displayPic,
     first_name,
@@ -108,7 +109,7 @@ export const handleSwipeEvent = async ({
     // TODO : make a api call to handle left swipes
   } else if (isValidRightSwipe(event)) {
     await putAxiosCall({
-      url: `/addMatch`,
+      url: `/addmatch`,
       data: { userId, matchedUserId },
     });
   }
@@ -127,6 +128,13 @@ export const getAllMatches = async ({ userId, genderPref }) => {
     ? getSanitizedMatches(data)
     : [{ displayProfilePic: "", displayName: "", userID: null }];
 };
+
+export const formattedTime = (params) =>
+  new Date(params).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
 
 export const renderMatchUtil = async ({ userId }) => {
   const { data, hasErrorOccurred } = await getAxiosCall({
@@ -152,6 +160,21 @@ export const getAxiosCall = async ({ route, params }) => {
 
   try {
     const { data } = await axios({ method: "GET", url, params });
+    response.data = data;
+  } catch (error) {
+    console.log(error);
+    response.hasErrorOccurred = true;
+  }
+  return response;
+};
+
+export const postAxiosCall = async ({ route, postData }) => {
+  const response = { data: undefined, hasErrorOccurred: false };
+  const BASE_PATH = `http://localhost:8000`;
+  const url = `${BASE_PATH}${route}`;
+
+  try {
+    const { data } = await axios({ method: "POST", url, data: postData });
     response.data = data;
   } catch (error) {
     console.log(error);

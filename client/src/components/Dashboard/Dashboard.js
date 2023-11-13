@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import useSWR from "swr";
+import axios from "axios";
 
 import Header from "./Header";
 import SwipeCard from "./SwipeCard";
@@ -99,7 +101,7 @@ export default function DashboardComponent() {
     displayName: "",
     messagesArray: [],
     status: "",
-    userID: null,
+    matchedID: null,
   });
 
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
@@ -241,7 +243,7 @@ export default function DashboardComponent() {
       displayName: "Jhon Doe",
       status: "online",
       messagesArray: TEMP_MESSAGE_ARRAY,
-      userID: 1,
+      matchedID: 1,
     });
   };
 
