@@ -138,12 +138,11 @@ app.post("/signup", async (req, res) => {
       expiresIn: 60 * 24,
     });
 
-    res.status(201).json({ token, userId: generatedUserId });
 
     transporter.sendMail(mailOptions, async function (error, info) {
       try {
         console.log("Email sent: " + info.response);
-        res.status(201).json({ token, userId: generatedUserId });
+        return res.status(201).json({ token, userId: generatedUserId });
       } catch (error) {
         console.error(error);
         return res
