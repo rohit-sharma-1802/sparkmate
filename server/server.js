@@ -44,7 +44,7 @@ io.on("connection", (socket) => {
   socket.on("message", (message, senderUserId) => {
     const timestamp = new Date();
     const data = { timestamp, message, senderUserId };
-    socket.emit("message-from-server", data);
+    io.emit("message-from-server", data);
   });
 });
 
@@ -63,12 +63,6 @@ app.get("/", async (req, res) => {
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  if (!passwordRegex.test(password)) {
-    return res
-      .status(400)
-      .json({ error: "Password does not meet the criteria." });
-  }
-
   const generatedUserId = uuidv4();
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -77,18 +71,24 @@ app.post("/signup", async (req, res) => {
     const database = client.db("SparkMate");
     const users = database.collection("users");
 
-    const existingUser = await users.findOne({ email });
-
-    if (existingUser) {
-      return res.status(409).send("User already exists. Please login");
-    }
-
     const sanitizedEmail = email.toLowerCase();
 
     if (!validEmailDomain.test(sanitizedEmail)) {
       return res.status(400).json({
         error: "Invalid email domain. Email must end with @nitk.edu.in",
       });
+    }
+
+    if (!passwordRegex.test(password)) {
+      return res
+        .status(400)
+        .json({ error: "Password does not meet the criteria." });
+    }
+
+    const existingUser = await users.findOne({ sanitizedEmail });
+
+    if (existingUser) {
+      return res.status(409).send("User already exists. Please login");
     }
 
     const otp = otpGenerator.generate(6, {
@@ -134,12 +134,10 @@ app.post("/signup", async (req, res) => {
       expiresIn: 60 * 24,
     });
 
-    res.status(201).json({ token, userId: generatedUserId });
-
     transporter.sendMail(mailOptions, async function (error, info) {
       try {
         console.log("Email sent: " + info.response);
-        res.status(201).json({ token, userId: generatedUserId });
+        return res.status(201).json({ token, userId: generatedUserId });
       } catch (error) {
         console.error(error);
         return res
@@ -150,18 +148,20 @@ app.post("/signup", async (req, res) => {
   } catch (err) {
     console.log(err);
   } finally {
-    await client.close();
+    // // await client.close();
   }
 });
 
 //Verify user
 app.post("/verifyUser", async (req, res) => {
   const { email, otpValue } = req.body;
+  console.log(email + " " + otpValue);
   try {
     await client.connect();
     const database = client.db("SparkMate");
     const users = database.collection("users");
     const user = await users.findOne({ email, otp: otpValue });
+    console.log(user);
     if (user) {
       await users.updateOne({ email }, { $unset: { otp: 1, otp_expiry: 1 } });
 
@@ -175,7 +175,7 @@ app.post("/verifyUser", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   } finally {
-    await client.close();
+    // // await client.close();
   }
 });
 
@@ -201,6 +201,8 @@ app.post("/login", async (req, res) => {
       user.hashed_password
     );
 
+    console.log("in login module");
+
     if (user && correctPassword) {
       const token = jwt.sign(user, email, {
         expiresIn: 60 * 24,
@@ -212,7 +214,7 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.log(err);
   } finally {
-    await client.close();
+    // // await client.close();
   }
 });
 
@@ -230,7 +232,7 @@ app.get("/user", async (req, res) => {
     const { _id, hashed_password, ...filteredUser } = user;
     res.send(filteredUser);
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
@@ -256,8 +258,19 @@ app.put("/addmatch", async (req, res) => {
       return;
     }
 
-    await addUserMatch(userId, { userId: matchedUserId, hasMatched: false });
-    await addUserMatch(matchedUserId, { userId, hasMatched: false });
+    // Set hasLiked to true for the matched user, indicating userId has liked matchedUserId
+    await addUserMatch(matchedUserId, {
+      userId,
+      hasMatched: false,
+      hasLiked: true,
+    });
+
+    // Set hasLiked to false for the current user, indicating matchedUserId has not liked userId yet
+    await addUserMatch(userId, {
+      userId: matchedUserId,
+      hasMatched: false,
+      hasLiked: false,
+    });
 
     res.status(200).json({
       success: true,
@@ -268,19 +281,11 @@ app.put("/addmatch", async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
-async function getUserById(userId) {
-  const database = client.db("SparkMate");
-  const users = database.collection("users");
-
-  return await users.findOne({ user_id: userId });
-}
-
 async function addUserMatch(userId, matchObject) {
-  await client.connect();
   const database = client.db("SparkMate");
   const users = database.collection("users");
 
@@ -290,25 +295,33 @@ async function addUserMatch(userId, matchObject) {
   );
 }
 
+async function getUserById(userId) {
+  const database = client.db("SparkMate");
+  const users = database.collection("users");
+
+  return await users.findOne({ user_id: userId });
+}
+
 async function updateMatchStatus(userId, matchedUserId) {
   const db = client.db("SparkMate");
   const users = db.collection("users");
 
+  console.log("Updating matches for:", userId, matchedUserId);
+
   await users.updateOne(
     { user_id: userId, "matches.userId": matchedUserId },
-    { $set: { "matches.$.hasMatched": true } }
+    { $set: { "matches.$.hasMatched": true, "matches.$.hasLiked": false } }
   );
 
   await users.updateOne(
     { user_id: matchedUserId, "matches.userId": userId },
-    { $set: { "matches.$.hasMatched": true } }
+    { $set: { "matches.$.hasMatched": true, "matches.$.hasLiked": false } }
   );
 }
 
-// Fetch all matches of the current user with hasMatched: true
-// hasMatched to indicate match has happened from both users
-app.post("/matches", async (req, res) => {
-  const { userId } = req.body;
+// Fetch users who've liked current user's profile but haven't matched yet
+app.get("/likes", async (req, res) => {
+  const { userId } = req.query;
 
   try {
     await client.connect();
@@ -316,20 +329,18 @@ app.post("/matches", async (req, res) => {
     const users = database.collection("users");
 
     const currentUser = await users.findOne({ user_id: userId });
-    console.log(currentUser);
+
     if (!currentUser) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const matchDetails = await users
+    const likedUserIds = currentUser.matches
+      .filter((match) => match.hasLiked)
+      .map((match) => match.userId);
+
+    const likedDetails = await users
       .find({
-        user_id: { $ne: userId },
-        matches: {
-          $elemMatch: {
-            user_id: { $in: currentUser.matches.map((match) => match.user_id) },
-            hasMatched: true,
-          },
-        },
+        user_id: { $in: likedUserIds },
       })
       .project({
         _id: 0,
@@ -343,12 +354,57 @@ app.post("/matches", async (req, res) => {
       })
       .toArray();
 
-    res.json(matchDetails);
+    return res.json(likedDetails);
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   } finally {
-    await client.close();
+    // await client.close();
+  }
+});
+
+// Fetch all matches of the current user with hasMatched: true
+// hasMatched to indicate match has happened from both users
+app.get("/matches", async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    await client.connect();
+    const database = client.db("SparkMate");
+    const users = database.collection("users");
+
+    const currentUser = await users.findOne({ user_id: userId });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const matchedUserIds = currentUser.matches
+      .filter((match) => match.hasMatched && !match.hasLiked)
+      .map((match) => match.userId);
+
+    const matchedDetails = await users
+      .find({
+        user_id: { $in: matchedUserIds },
+      })
+      .project({
+        _id: 0,
+        user_id: 1,
+        about: 1,
+        first_name: 1,
+        gender_identity: 1,
+        gender_interest: 1,
+        dob: 1,
+        image: 1,
+      })
+      .toArray();
+
+    return res.json(matchedDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    // await client.close();
   }
 });
 
@@ -376,7 +432,7 @@ app.get("/users", async (req, res) => {
 
     res.json(foundUsers);
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
@@ -399,10 +455,9 @@ app.get("/gendered-users", async (req, res) => {
       { projection: { matches: 1 } }
     );
 
-    const excludedUserIds = Array.isArray(currentUserMatches.matches)
-      ? currentUserMatches.matches.map((match) => match.userId)
-      : [];
-
+    const excludedUserIds = currentUserMatches.matches.map(
+      (match) => match.userId
+    );
     let foundUsers;
     if (gender === "everyone") {
       foundUsers = await getRandomSuggestions(users, userId, excludedUserIds);
@@ -429,7 +484,7 @@ app.get("/gendered-users", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
@@ -513,7 +568,6 @@ app.post("/user", async (req, res) => {
         gender_identity: formData.gender_identity,
         gender_interest: formData.gender_interest,
         about: formData.about,
-        matches: formData.matches,
         image: {
           public_id: result.public_id,
           url: result.secure_url,
@@ -525,17 +579,57 @@ app.post("/user", async (req, res) => {
 
     const insertedUser = await users.updateOne(query, updateDocument, options);
 
+    console.log(insertedUser);
+
     res.json(insertedUser);
   } catch (err) {
     console.log(err);
   } finally {
-    await client.close();
+    // await client.close();
+  }
+});
+
+// Unmatch a user
+app.put("/unmatch", async (req, res) => {
+  const { userId, matchedUserId } = req.body;
+  const room_id = generateRoomId(userId, matchedUserId);
+
+  try {
+    await client.connect();
+    const database = client.db("SparkMate");
+    const users = database.collection("users");
+    const chatRooms = database.collection("chatRooms");
+
+    // Update the current user's matches array to remove the matched user
+    await users.updateOne(
+      { user_id: userId },
+      { $pull: { matches: { userId: matchedUserId } } }
+    );
+
+    // Update the matched user's matches array to remove the current user
+    await users.updateOne(
+      { user_id: matchedUserId },
+      { $pull: { matches: { userId: userId } } }
+    );
+
+    // Delete the chatroom
+    const existingRoom = await chatRooms.findOne({ room_id });
+    if (existingRoom) {
+      await rooms.deleteOne({ room_id });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    // await client.close();
   }
 });
 
 // Get Messages by Room ID
 app.get("/messages", async (req, res) => {
-  const { from_userId, to_userId } = req.body;
+  const { from_userId, to_userId } = req.query;
   const room_id = generateRoomId(from_userId, to_userId);
 
   try {
@@ -556,7 +650,7 @@ app.get("/messages", async (req, res) => {
   } catch (e) {
     console.log(e.message);
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
@@ -622,7 +716,7 @@ app.post("/message", async (req, res) => {
       res.send(newRoom.messages[0]);
     }
   } finally {
-    await client.close();
+    // await client.close();
   }
 });
 
