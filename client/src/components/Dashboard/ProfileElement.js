@@ -3,11 +3,12 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { TABS } from "../../constants/constants";
 import { ProfileDisplayContext } from "../../context/dashboardContext";
+import { formattedName } from "../../utils/helper";
+import { getNotificationMessage } from "../../utils/getter";
 
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import { formattedName } from "../../utils/helper";
 
 export default function ProfileElement({
   ID = "",
@@ -45,7 +46,7 @@ export default function ProfileElement({
         <div className="listHead">
           {loader === false &&
             (tab === TABS.PROFILE ? (
-              <h5>{formattedName(displayName)} has been matched with you</h5>
+              <p>{getNotificationMessage(formattedName(displayName))}</p>
             ) : (
               <h4>{formattedName(displayName)}</h4>
             ))}

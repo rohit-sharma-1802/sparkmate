@@ -5,7 +5,6 @@ import {
   ACTIONS,
 } from "../constants/constants";
 import { putAxiosCall } from "./axiosUtil";
-import { getSanitizedSuggestion } from "./getter";
 
 export const changeTabUtils = ({ areChatsAvailable, areChatsLoading, tab }) => {
   if (!tab) return TABS.PROFILE;
@@ -16,8 +15,13 @@ export const changeTabUtils = ({ areChatsAvailable, areChatsLoading, tab }) => {
 export const isValidKeyCodeForSwipe = (keyCode) =>
   keyCode && keyCode !== LEFT_ARROW_KEYCODE && keyCode !== RIGHT_ARROW_KEYCODE;
 
-const areSuggestionAvailable = ({ lengthOfSugestionArray, index }) =>
-  lengthOfSugestionArray === index || lengthOfSugestionArray === 0;
+const areSuggestionAvailable = ({
+  lengthOfSugestionArray,
+  index,
+  suggestion,
+}) =>
+  (lengthOfSugestionArray === index || lengthOfSugestionArray === 0) &&
+  !suggestion;
 
 const isValidLeftSwipe = (event) =>
   event.target.attributes.iconName?.value === ACTIONS.LEFT_SWIPE ||
@@ -34,12 +38,11 @@ export const handleSwipeEvent = async ({
   index,
   userId,
   matchedUserId,
+  displayLikes,
 }) => {
   if (isValidKeyCodeForSwipe(event.keyCode)) return;
-  if (
-    areSuggestionAvailable({ lengthOfSugestionArray, index }) ||
-    !suggestion?.data
-  )
+
+  if (areSuggestionAvailable({ lengthOfSugestionArray, index, suggestion }))
     return {
       isError: true,
       message: "You have exceeded your limit! Please try again tomorrow.",
@@ -50,14 +53,18 @@ export const handleSwipeEvent = async ({
     // TODO : make a api call to handle left swipes
   } else if (isValidRightSwipe(event)) {
     await putAxiosCall({
-      url: `/addmatch`,
+      route: `/addmatch`,
       data: { userId, matchedUserId },
     });
   }
-  const { displayPic, dob, about, first_name, matchedID, pronouns } =
-    getSanitizedSuggestion(suggestion.data);
 
-  return { displayPic, dob, about, first_name, matchedID, pronouns };
+  const indexOfMatchProfile = displayLikes.data.findIndex(
+    ({ userID }) => userID === matchedUserId
+  );
+  if (indexOfMatchProfile !== -1)
+    displayLikes.data.splice(indexOfMatchProfile, 1);
+
+  return { isError: false, message: "" };
 };
 
 export const formattedTime = (params) => {

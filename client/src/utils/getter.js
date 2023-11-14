@@ -4,6 +4,7 @@ import { getAxiosCall } from "./axiosUtil";
 // TODO : checking obj fields properly
 
 export const getSanitizedSuggestion = (suggestion) => {
+  if (!suggestion) return;
   const {
     first_name,
     dob,
@@ -15,7 +16,10 @@ export const getSanitizedSuggestion = (suggestion) => {
     pronouns = "She/Her",
   } = suggestion;
   const displayPic = url.length === 0 ? image?.url : url;
-  const age = dob.split("-").length === 3 ? calculateAge(dob) : dob;
+  const age =
+    typeof dob === "string" && dob.split("-").length === 3
+      ? calculateAge(dob)
+      : dob;
   return {
     displayPic,
     first_name,
@@ -76,4 +80,16 @@ export const getAllChats = async ({ senderID, recipientID }) => {
     params: { from_userId: senderID, to_userId: recipientID },
   });
   return !hasErrorOccurred ? data : [];
+};
+
+export const getNotificationMessage = (username) => {
+  const notificationMessage = [
+    `You and ${username}: Sparks Ignited! 💘`,
+    `You and ${username} – A spark has been kindled! 💞`,
+    `${username} and You, a spark has been lit! 💖`,
+  ];
+  const randomMessage =
+    notificationMessage[Math.floor(Math.random() * notificationMessage.length)];
+
+  return randomMessage;
 };

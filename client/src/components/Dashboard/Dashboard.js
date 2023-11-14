@@ -49,7 +49,7 @@ export default function DashboardComponent() {
     error: { isError: false, message: "" },
   });
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(1);
   const [tab, setTab] = useState(TABS.PROFILE);
 
   const [displayChat, setDisplayChat] = useState({
@@ -146,6 +146,16 @@ export default function DashboardComponent() {
         ...prevState,
         loading: false,
         data,
+        error: { isError: false, message: "" },
+      }));
+    } else {
+      setSuggestion((prevState) => ({
+        ...prevState,
+        error: {
+          isError: true,
+          message:
+            "Suggestions are currently unavailable. They will be displayed here when ready.",
+        },
       }));
     }
   }, [filteredGenderedUsers[0]]);
@@ -189,7 +199,11 @@ export default function DashboardComponent() {
   };
 
   const handleRenderMatch = async (userId) => {
-    setSuggestion((prevState) => ({ ...prevState, loading: true }));
+    setSuggestion((prevState) => ({
+      ...prevState,
+      loading: true,
+      error: { isError: false, message: "" },
+    }));
     const data = await renderMatchUtil({ userId });
     setSuggestion((prevState) => ({
       ...prevState,
@@ -214,37 +228,46 @@ export default function DashboardComponent() {
   };
 
   const handleSwipe = async (event, matchedID) => {
-    const data = await handleSwipeEvent({
+    if (suggestion.error.isError) return;
+    const result = await handleSwipeEvent({
       event,
       index,
       lengthOfSugestionArray: filteredGenderedUsers.length,
       suggestion:
         suggestion.showingLikedUserProfile === false
           ? filteredGenderedUsers[index]
-          : suggestion,
+          : suggestion.data,
       userId: cookies.UserId,
       matchedUserId: matchedID,
+      displayLikes,
     });
-    if (!data) return;
-    if (data.isError) {
+    if (!result) return;
+    if (result.isError) {
       setSuggestion((prevState) => ({
         ...prevState,
         loading: false,
         showingLikedUserProfile: false,
-        error: { isError: true, message: data.message },
+        error: result,
       }));
       return;
     }
 
-    const indexOfMatchProfile = displayLikes.data.findIndex(
-      ({ userID }) => userID === data.matchedID
-    );
-    if (indexOfMatchProfile !== -1)
-      displayLikes.data.splice(indexOfMatchProfile, 1);
-
     if (suggestion.showingLikedUserProfile === false)
       setIndex((prevIndex) => prevIndex + 1);
 
+    const data = getSanitizedSuggestion(filteredGenderedUsers[index]);
+    if (!data) {
+      setSuggestion((prevState) => ({
+        ...prevState,
+        loading: false,
+        showingLikedUserProfile: false,
+        error: {
+          isError: true,
+          message: "You have exceeded your limit! Please try again tomorrow.",
+        },
+      }));
+      return;
+    }
     setSuggestion((prevState) => ({
       ...prevState,
       loading: false,
