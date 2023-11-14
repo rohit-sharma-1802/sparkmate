@@ -7,20 +7,20 @@ import Header from "./Header";
 import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
 import ProfileDisplay from "./ProfileDisplay";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../Error/ErrorBoundary";
 
 import { TABS } from "../../constants/constants";
+import { changeTabUtils, handleSwipeEvent } from "../../utils/helper";
+
 import {
-  changeTabUtils,
   getAllChats,
   getAllMatches,
-  getAxiosCall,
   getFilteredMatches,
   getSanitizedSuggestion,
-  handleSwipeEvent,
-  unmatchUtil,
-  renderMatchUtil,
-} from "../../utils/helper";
+  getAllLikes,
+} from "../../utils/getter";
+import { getAxiosCall } from "../../utils/axiosUtil";
+import { unmatchUtil, renderMatchUtil } from "../../utils/utils";
 
 import {
   ChatContext,
@@ -56,7 +56,7 @@ export default function DashboardComponent() {
     data: [{ displayProfilePic: "", displayName: "", userID: null }],
     loading: false,
   });
-  const [displayMatches, setDisplayMatches] = useState({
+  const [displayLikes, setDisplayLikes] = useState({
     data: [{ displayProfilePic: "", displayName: "", userID: null }],
     loading: true,
   });
@@ -119,6 +119,13 @@ export default function DashboardComponent() {
     setDisplayChat(() => ({ data, loading: false }));
   };
 
+  const getLikes = async () => {
+    setDisplayLikes((prevState) => ({ ...prevState, loading: true }));
+    if (!user) return;
+    const data = await getAllLikes({ userId: user.user_id });
+    setDisplayLikes(() => ({ data, loading: false }));
+  };
+
   const filteredGenderedUsers = getFilteredMatches({
     user,
     genderedUsers,
@@ -126,6 +133,10 @@ export default function DashboardComponent() {
 
   useEffect(() => {
     getMatches();
+  }, [user]);
+
+  useEffect(() => {
+    getLikes();
   }, [user]);
 
   useEffect(() => {
@@ -225,11 +236,11 @@ export default function DashboardComponent() {
       return;
     }
 
-    const indexOfMatchProfile = displayMatches.data.findIndex(
+    const indexOfMatchProfile = displayLikes.data.findIndex(
       ({ userID }) => userID === data.matchedID
     );
     if (indexOfMatchProfile !== -1)
-      displayMatches.data.splice(indexOfMatchProfile, 1);
+      displayLikes.data.splice(indexOfMatchProfile, 1);
 
     if (suggestion.showingLikedUserProfile === false)
       setIndex((prevIndex) => prevIndex + 1);
@@ -278,9 +289,9 @@ export default function DashboardComponent() {
         {tab === TABS.PROFILE && (
           <ProfileDisplayContext.Provider
             value={{
-              matchedArray: displayMatches.data,
+              matchedArray: displayLikes.data,
               handleProfileClick: handleRenderMatch,
-              loader: displayMatches.loading,
+              loader: displayLikes.loading,
               tab: TABS.PROFILE,
             }}
           >

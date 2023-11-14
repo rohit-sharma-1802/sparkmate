@@ -7,7 +7,7 @@ import { ProfileDisplayContext } from "../../context/dashboardContext";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../Error/ErrorBoundary";
 
 const sanitizedString = (params) => params.trim().toLowerCase();
 

@@ -1,5 +1,5 @@
 import DashboardComponent from "../components/Dashboard/Dashboard";
-import ErrorBoundary from "../components/ErrorBoundary";
+import ErrorBoundary from "../components/Error/ErrorBoundary";
 
 const Dashboard = () => {
   return (
