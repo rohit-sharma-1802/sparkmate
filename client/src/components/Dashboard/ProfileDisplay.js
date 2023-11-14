@@ -16,8 +16,6 @@ export default function ProfileDisplay() {
   const [filteredProfile, setFilteredProfile] = useState([]);
   const { matchedArray, loader, tab } = useContext(ProfileDisplayContext);
 
-  console.log("loader", tab, loader, matchedArray, filteredProfile);
-
   const handleSearch = (event) => {
     setSearchText(event.target.value);
   };
@@ -67,17 +65,9 @@ export default function ProfileDisplay() {
                 : `Get Swiping. When you match with other users they'll appear here, where you can send them a message`}
             </h4>
           )}
-          {/* {loader === false && filteredProfile?.length === 0 && (
-            <h4>
-              {tab === TABS.PROFILE
-                ? `Interested in you. When someone swipes right on you, you'll be able to find them right here`
-                : `Get Swiping. When you match with other users they'll appear here, where you can send them a message`}
-            </h4>
-          )} */}
           {loader === false &&
             filteredProfile?.length > 0 &&
             filteredProfile.map((profile) => {
-              console.log("profile", profile);
               const displayName =
                 profile.displayName.charAt(0).toUpperCase() +
                 profile.displayName.slice(1);

@@ -87,7 +87,6 @@ export default function DashboardComponent() {
   useEffect(() => {
     if (!likeData) return;
     if (likeData.length === 0) {
-      console.log(likeData.length);
       return;
     }
     const revalidatedData = getSanitizedProfiles(likeData);
@@ -102,7 +101,6 @@ export default function DashboardComponent() {
     if (!matchData || matchData.length === 0) return;
     const revalidatedData = getSanitizedProfiles(matchData);
     setDisplayChat(() => ({ data: revalidatedData, loading: false }));
-    console.log(revalidatedData);
   }, [matchData?.length]);
 
   useEffect(() => {
