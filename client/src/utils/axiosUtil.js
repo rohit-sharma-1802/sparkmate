@@ -33,11 +33,14 @@ export const postAxiosCall = async ({ route, postData }) => {
 export const putAxiosCall = async ({ route, data }) => {
   const BASE_PATH = `http://localhost:8000`;
   const url = `${BASE_PATH}${route}`;
+  const response = { hasErrorOccurred: false };
 
   try {
     const res = await axios({ method: "PUT", url, data });
     console.log("res", res);
   } catch (error) {
     console.log(error);
+    response.hasErrorOccurred = true;
   }
+  return response;
 };

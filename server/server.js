@@ -622,7 +622,7 @@ app.put("/unmatch", async (req, res) => {
     // Delete the chatroom
     const existingRoom = await chatRooms.findOne({ room_id });
     if (existingRoom) {
-      await rooms.deleteOne({ room_id });
+      await chatRooms.deleteOne({ room_id });
     }
 
     res.json({ success: true });

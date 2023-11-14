@@ -64,9 +64,6 @@ export default function SwipeCard({
                   <strong>Age:</strong> {age}
                 </p>
                 <p>
-                  <strong>I would describe myself as:</strong> {pronouns}
-                </p>
-                <p>
                   <strong>About me:</strong> {about}
                 </p>
               </>
