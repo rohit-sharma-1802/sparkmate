@@ -244,9 +244,11 @@ app.put("/addmatch", async (req, res) => {
 
     const otherUser = await getUserById(matchedUserId);
 
-    const hasMatchedIndex = otherUser.matches.findIndex(
-      (match) => match.userId === userId && match.hasMatched === false
-    );
+    const hasMatchedIndex = Array.isArray(otherUser.matches)
+      ? otherUser.matches.findIndex(
+          (match) => match.userId === userId && match.hasMatched === false
+        )
+      : -1;
 
     if (hasMatchedIndex !== -1) {
       await updateMatchStatus(userId, matchedUserId);
@@ -334,9 +336,11 @@ app.get("/likes", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const likedUserIds = currentUser.matches
-      .filter((match) => match.hasLiked)
-      .map((match) => match.userId);
+    const likedUserIds = Array.isArray(currentUser.matches)
+      ? currentUser.matches
+          .filter((match) => match.hasLiked)
+          .map((match) => match.userId)
+      : [];
 
     const likedDetails = await users
       .find({
@@ -379,9 +383,11 @@ app.get("/matches", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const matchedUserIds = currentUser.matches
-      .filter((match) => match.hasMatched && !match.hasLiked)
-      .map((match) => match.userId);
+    const matchedUserIds = Array.isArray(currentUser.matches)
+      ? currentUser.matches
+          .filter((match) => match.hasMatched && !match.hasLiked)
+          .map((match) => match.userId)
+      : [];
 
     const matchedDetails = await users
       .find({
@@ -455,9 +461,10 @@ app.get("/gendered-users", async (req, res) => {
       { projection: { matches: 1 } }
     );
 
-    const excludedUserIds = currentUserMatches.matches.map(
-      (match) => match.userId
-    );
+    const excludedUserIds = Array.isArray(currentUserMatches.matches)
+      ? currentUserMatches.matches.map((match) => match.userId)
+      : [];
+
     let foundUsers;
     if (gender === "everyone") {
       foundUsers = await getRandomSuggestions(users, userId, excludedUserIds);
