@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
+import useSWR from "swr";
+import axios from "axios";
 
 import Header from "./Header";
 import SwipeCard from "./SwipeCard";
@@ -18,6 +20,7 @@ import {
   getFilteredMatches,
   getSanitizedSuggestion,
   getAllLikes,
+  getSanitizedProfiles,
 } from "../../utils/getter";
 import { getAxiosCall } from "../../utils/axiosUtil";
 import { unmatchUtil, renderMatchUtil } from "../../utils/utils";
@@ -71,6 +74,36 @@ export default function DashboardComponent() {
 
   const [cookies, setCookie, removeCookie] = useCookies(["user"]);
   const navigate = useNavigate();
+
+  const fetcher = (url) =>
+    axios({ method: "GET", url, params: { userId: cookies.UserId } }).then(
+      (response) => response.data
+    );
+
+  const { data: likeData } = useSWR("http://localhost:8000/likes", fetcher, {
+    refreshInterval: 1000,
+  });
+
+  useEffect(() => {
+    if (!likeData) return;
+    if (likeData.length === 0) {
+      console.log(likeData.length);
+      return;
+    }
+    const revalidatedData = getSanitizedProfiles(likeData);
+    setDisplayLikes(() => ({ data: revalidatedData, loading: false }));
+  }, [likeData?.length]);
+
+  const { data: matchData } = useSWR("http://localhost:8000/matches", fetcher, {
+    refreshInterval: 1000,
+  });
+
+  useEffect(() => {
+    if (!matchData || matchData.length === 0) return;
+    const revalidatedData = getSanitizedProfiles(matchData);
+    setDisplayChat(() => ({ data: revalidatedData, loading: false }));
+    console.log(revalidatedData);
+  }, [matchData?.length]);
 
   useEffect(() => {
     if (!cookies.UserId) navigate("/");
