@@ -607,12 +607,6 @@ app.put("/unmatch", async (req, res) => {
     const users = database.collection("users");
     const chatRooms = database.collection("chatRooms");
 
-    // Update the current user's matches array to remove the matched user
-    // await users.updateOne(
-    //   { user_id: userId },
-    //   { $pull: { matches: { userId: matchedUserId } } }
-    // );
-
     await users.updateOne(
       { user_id: userId, "matches.userId": matchedUserId },
       { $set: { "matches.$.hasMatched": false, "matches.$.hasLiked": false } }
@@ -622,12 +616,6 @@ app.put("/unmatch", async (req, res) => {
       { user_id: matchedUserId, "matches.userId": userId },
       { $set: { "matches.$.hasMatched": false, "matches.$.hasLiked": false } }
     );
-
-    // Update the matched user's matches array to remove the current user
-    // await users.updateOne(
-    //   { user_id: matchedUserId },
-    //   { $pull: { matches: { userId: userId } } }
-    // );
 
     // Delete the chatroom
     const existingRoom = await chatRooms.findOne({ room_id });

@@ -30,7 +30,7 @@ export const getSanitizedSuggestion = (suggestion) => {
   };
 };
 
-const getSanitizedProfiles = (matches) => {
+export const getSanitizedProfiles = (matches) => {
   const sanitizedMatches = matches.map((match) => {
     const { first_name, url = "", image, user_id } = match;
     const displayPic = url.length === 0 ? image?.url : url;
