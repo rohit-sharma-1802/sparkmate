@@ -7,7 +7,7 @@ import { ProfileDisplayContext } from "../../context/dashboardContext";
 import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../Error/ErrorBoundary";
 
 const sanitizedString = (params) => params.trim().toLowerCase();
 
@@ -61,8 +61,8 @@ export default function ProfileDisplay() {
           {loader === false && filteredProfile?.length === 0 && (
             <h4>
               {tab === TABS.PROFILE
-                ? `No available matches`
-                : `No available chats`}
+                ? `Interested in you. When someone swipes right on you, you'll be able to find them right here`
+                : `Get Swiping. When you match with other users they'll appear here, where you can send them a message`}
             </h4>
           )}
           {loader === false &&

@@ -3,12 +3,9 @@ import { useCookies } from "react-cookie";
 import io from "socket.io-client";
 
 import { ChatContext } from "../../context/dashboardContext";
-import ErrorBoundary from "../ErrorBoundary";
-import {
-  postAxiosCall,
-  formattedTime,
-  formattedName,
-} from "../../utils/helper";
+import ErrorBoundary from "../Error/ErrorBoundary";
+import { formattedTime, formattedName } from "../../utils/helper";
+import { postAxiosCall } from "../../utils/axiosUtil";
 
 import "./style/index.css";
 import "./style/swipeCard.css";

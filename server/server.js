@@ -41,9 +41,9 @@ app.use(express.json());
 app.use(fileUpload());
 
 io.on("connection", (socket) => {
-  socket.on("message", (message, senderUserId) => {
+  socket.on("message", (message, from_userId) => {
     const timestamp = new Date();
-    const data = { timestamp, message, senderUserId };
+    const data = { timestamp, message, from_userId };
     io.emit("message-from-server", data);
   });
 });

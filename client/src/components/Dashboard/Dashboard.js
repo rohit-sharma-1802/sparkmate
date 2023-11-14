@@ -7,20 +7,20 @@ import Header from "./Header";
 import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
 import ProfileDisplay from "./ProfileDisplay";
-import ErrorBoundary from "../ErrorBoundary";
+import ErrorBoundary from "../Error/ErrorBoundary";
 
 import { TABS } from "../../constants/constants";
+import { changeTabUtils, handleSwipeEvent } from "../../utils/helper";
+
 import {
-  changeTabUtils,
   getAllChats,
   getAllMatches,
-  getAxiosCall,
   getFilteredMatches,
   getSanitizedSuggestion,
-  handleSwipeEvent,
-  unmatchUtil,
-  renderMatchUtil,
-} from "../../utils/helper";
+  getAllLikes,
+} from "../../utils/getter";
+import { getAxiosCall } from "../../utils/axiosUtil";
+import { unmatchUtil, renderMatchUtil } from "../../utils/utils";
 
 import {
   ChatContext,
@@ -49,14 +49,14 @@ export default function DashboardComponent() {
     error: { isError: false, message: "" },
   });
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(1);
   const [tab, setTab] = useState(TABS.PROFILE);
 
   const [displayChat, setDisplayChat] = useState({
     data: [{ displayProfilePic: "", displayName: "", userID: null }],
     loading: false,
   });
-  const [displayMatches, setDisplayMatches] = useState({
+  const [displayLikes, setDisplayLikes] = useState({
     data: [{ displayProfilePic: "", displayName: "", userID: null }],
     loading: true,
   });
@@ -119,6 +119,13 @@ export default function DashboardComponent() {
     setDisplayChat(() => ({ data, loading: false }));
   };
 
+  const getLikes = async () => {
+    setDisplayLikes((prevState) => ({ ...prevState, loading: true }));
+    if (!user) return;
+    const data = await getAllLikes({ userId: user.user_id });
+    setDisplayLikes(() => ({ data, loading: false }));
+  };
+
   const filteredGenderedUsers = getFilteredMatches({
     user,
     genderedUsers,
@@ -129,12 +136,26 @@ export default function DashboardComponent() {
   }, [user]);
 
   useEffect(() => {
+    getLikes();
+  }, [user]);
+
+  useEffect(() => {
     if (filteredGenderedUsers.length > 0) {
       const data = getSanitizedSuggestion(filteredGenderedUsers[0]);
       setSuggestion((prevState) => ({
         ...prevState,
         loading: false,
         data,
+        error: { isError: false, message: "" },
+      }));
+    } else {
+      setSuggestion((prevState) => ({
+        ...prevState,
+        error: {
+          isError: true,
+          message:
+            "Suggestions are currently unavailable. They will be displayed here when ready.",
+        },
       }));
     }
   }, [filteredGenderedUsers[0]]);
@@ -178,7 +199,11 @@ export default function DashboardComponent() {
   };
 
   const handleRenderMatch = async (userId) => {
-    setSuggestion((prevState) => ({ ...prevState, loading: true }));
+    setSuggestion((prevState) => ({
+      ...prevState,
+      loading: true,
+      error: { isError: false, message: "" },
+    }));
     const data = await renderMatchUtil({ userId });
     setSuggestion((prevState) => ({
       ...prevState,
@@ -203,37 +228,46 @@ export default function DashboardComponent() {
   };
 
   const handleSwipe = async (event, matchedID) => {
-    const data = await handleSwipeEvent({
+    if (suggestion.error.isError) return;
+    const result = await handleSwipeEvent({
       event,
       index,
       lengthOfSugestionArray: filteredGenderedUsers.length,
       suggestion:
         suggestion.showingLikedUserProfile === false
           ? filteredGenderedUsers[index]
-          : suggestion,
+          : suggestion.data,
       userId: cookies.UserId,
       matchedUserId: matchedID,
+      displayLikes,
     });
-    if (!data) return;
-    if (data.isError) {
+    if (!result) return;
+    if (result.isError) {
       setSuggestion((prevState) => ({
         ...prevState,
         loading: false,
         showingLikedUserProfile: false,
-        error: { isError: true, message: data.message },
+        error: result,
       }));
       return;
     }
 
-    const indexOfMatchProfile = displayMatches.data.findIndex(
-      ({ userID }) => userID === data.matchedID
-    );
-    if (indexOfMatchProfile !== -1)
-      displayMatches.data.splice(indexOfMatchProfile, 1);
-
     if (suggestion.showingLikedUserProfile === false)
       setIndex((prevIndex) => prevIndex + 1);
 
+    const data = getSanitizedSuggestion(filteredGenderedUsers[index]);
+    if (!data) {
+      setSuggestion((prevState) => ({
+        ...prevState,
+        loading: false,
+        showingLikedUserProfile: false,
+        error: {
+          isError: true,
+          message: "You have exceeded your limit! Please try again tomorrow.",
+        },
+      }));
+      return;
+    }
     setSuggestion((prevState) => ({
       ...prevState,
       loading: false,
@@ -278,9 +312,9 @@ export default function DashboardComponent() {
         {tab === TABS.PROFILE && (
           <ProfileDisplayContext.Provider
             value={{
-              matchedArray: displayMatches.data,
+              matchedArray: displayLikes.data,
               handleProfileClick: handleRenderMatch,
-              loader: displayMatches.loading,
+              loader: displayLikes.loading,
               tab: TABS.PROFILE,
             }}
           >

@@ -10,7 +10,14 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(180deg, rgb(254, 48, 114),30%, rgb(255, 89, 64),60%,rgb(255, 255, 255));
+  background: linear-gradient(
+    180deg,
+    rgb(254, 48, 114),
+    30%,
+    rgb(255, 89, 64),
+    60%,
+    rgb(255, 255, 255)
+  );
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -43,7 +50,11 @@ body {
   width: 100%;
   height: 60px;
   background: #ededed;
-  background: linear-gradient(45deg, rgb(254, 48, 114,0.2), rgb(255, 89, 64,0.2));
+  background: linear-gradient(
+    45deg,
+    rgb(254, 48, 114, 0.2),
+    rgb(255, 89, 64, 0.2)
+  );
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -86,7 +97,11 @@ body {
   width: 100%;
   height: 50px;
   background: #f6f6f6;
-  background: linear-gradient(45deg, rgb(254, 48, 114,0.2), rgb(255, 89, 64,0.2));
+  background: linear-gradient(
+    45deg,
+    rgb(254, 48, 114, 0.2),
+    rgb(255, 89, 64, 0.2)
+  );
   display: flex;
   justify-content: center;
   align-items: center;
@@ -136,13 +151,13 @@ body {
   cursor: pointer;
 }
 
-  /* background: linear-gradient(45deg, rgb(250, 230, 235), rgb(239, 219, 244)); */
+/* background: linear-gradient(45deg, rgb(250, 230, 235), rgb(239, 219, 244)); */
 .chatlist .block.active {
-  background: rgb(245, 222, 222) ;
+  background: rgb(245, 222, 222);
 }
 
 .chatlist .block:hover {
-  background: rgb(255, 232, 232) ;;
+  background: rgb(255, 232, 232);
 }
 
 .left-icon {
@@ -153,10 +168,10 @@ body {
   transition: all 0.5s;
 }
 
-.left-icon:hover{
+.left-icon:hover {
   background: linear-gradient(90deg, rgb(254, 48, 114), rgb(255, 89, 64));
   color: white;
-  transform: scale(0.9); 
+  transform: scale(0.9);
 }
 
 .right-icon {
@@ -167,13 +182,12 @@ body {
   transition: all 0.5s;
 }
 
-.right-icon:hover{
+.right-icon:hover {
   background: linear-gradient(90deg, rgb(254, 48, 114), rgb(255, 89, 64));
   color: white;
-  transform: scale(0.9); 
-}detai
-
-.chatlist .block .imgBox {
+  transform: scale(0.9);
+}
+detai .chatlist .block .imgBox {
   position: relative;
   min-width: 45px;
   height: 45px;
@@ -194,6 +208,10 @@ body {
   padding-left: 5%;
   width: 80%;
   height: 20px;
+}
+
+.listHead p {
+  text-align: left;
 }
 
 .chatlist .block .details .listHead h4 {
