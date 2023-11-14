@@ -608,9 +608,19 @@ app.put("/unmatch", async (req, res) => {
     const chatRooms = database.collection("chatRooms");
 
     // Update the current user's matches array to remove the matched user
+    // await users.updateOne(
+    //   { user_id: userId },
+    //   { $pull: { matches: { userId: matchedUserId } } }
+    // );
+
     await users.updateOne(
-      { user_id: userId },
-      { $pull: { matches: { userId: matchedUserId } } }
+      { user_id: userId, "matches.userId": matchedUserId },
+      { $set: { "matches.$.hasMatched": false, "matches.$.hasLiked": false } }
+    );
+
+    await users.updateOne(
+      { user_id: matchedUserId, "matches.userId": userId },
+      { $set: { "matches.$.hasMatched": false, "matches.$.hasLiked": false } }
     );
 
     // Update the matched user's matches array to remove the current user
@@ -622,7 +632,7 @@ app.put("/unmatch", async (req, res) => {
     // Delete the chatroom
     const existingRoom = await chatRooms.findOne({ room_id });
     if (existingRoom) {
-      await rooms.deleteOne({ room_id });
+      await chatRooms.deleteOne({ room_id });
     }
 
     res.json({ success: true });

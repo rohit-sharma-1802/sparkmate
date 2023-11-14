@@ -120,9 +120,7 @@ export default function ChatWindow() {
     <div className="rightSide-chatBox">
       {areChatsAvailable > 0 && <ChatHeader />}
       <ErrorBoundary fallback="Error">
-        <div className="chatbox">
-          <ChatBox />
-        </div>
+        <div className="chatbox">{areChatsAvailable > 0 && <ChatBox />}</div>
       </ErrorBoundary>
       {areChatsAvailable > 0 && (
         <div className="chat_input">
