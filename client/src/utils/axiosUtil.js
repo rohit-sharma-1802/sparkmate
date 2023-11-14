@@ -34,10 +34,9 @@ export const putAxiosCall = async ({ route, data }) => {
   const BASE_PATH = `http://localhost:8000`;
   const url = `${BASE_PATH}${route}`;
 
-  console.log(url, data);
-
   try {
-    await axios({ method: "PUT", url, data });
+    const res = await axios({ method: "PUT", url, data });
+    console.log("res", res);
   } catch (error) {
     console.log(error);
   }

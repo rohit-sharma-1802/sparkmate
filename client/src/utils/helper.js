@@ -20,7 +20,7 @@ const areSuggestionAvailable = ({
   index,
   suggestion,
 }) =>
-  (lengthOfSugestionArray === index || lengthOfSugestionArray === 0) &&
+  (lengthOfSugestionArray + 1 === index || lengthOfSugestionArray === 0) &&
   !suggestion;
 
 const isValidLeftSwipe = (event) =>
