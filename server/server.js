@@ -624,10 +624,10 @@ app.put("/unmatch", async (req, res) => {
     );
 
     // Update the matched user's matches array to remove the current user
-    await users.updateOne(
-      { user_id: matchedUserId },
-      { $pull: { matches: { userId: userId } } }
-    );
+    // await users.updateOne(
+    //   { user_id: matchedUserId },
+    //   { $pull: { matches: { userId: userId } } }
+    // );
 
     // Delete the chatroom
     const existingRoom = await chatRooms.findOne({ room_id });
