@@ -193,7 +193,7 @@ export default function DashboardComponent() {
     });
     if (chooseTab === TABS.CHATS) {
       if (displayChat.loading === true) return;
-      handleChatClick(displayChat.data[0].userID);
+      if (displayChat.data[0]) handleChatClick(displayChat.data[0].userID);
     }
     setTab(chooseTab);
   };
