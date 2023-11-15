@@ -12,7 +12,7 @@ export function NotFoundLeft({ tab }) {
     </div>
   ) : (
     <div className="no-match">
-      <h1>Get Swiping</h1>
+      <h1>Get Swiped</h1>
       <p>
         When you match with other users they'll appear here, where you can chat
       </p>

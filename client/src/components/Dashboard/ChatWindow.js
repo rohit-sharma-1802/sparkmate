@@ -79,7 +79,7 @@ function ChatHeader() {
                 className="service-item"
                 onClick={() => handleUnMatch(matchedID)}
               >
-                Unmatch user
+                Unmatch
               </li>
               <li
                 className="service-item"
