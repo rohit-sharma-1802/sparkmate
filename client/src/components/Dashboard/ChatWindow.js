@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import io from "socket.io-client";
+import EmojiPicker from "emoji-picker-react";
+import { VscReport } from "react-icons/vsc";
 
 import { ChatContext } from "../../context/dashboardContext";
 import ErrorBoundary from "../Error/ErrorBoundary";
@@ -55,6 +57,8 @@ function ChatHeader() {
   const { displayProfilePic, displayName, matchedID, handleUnMatch } =
     useContext(ChatContext);
 
+  const [isClicked, setIsClicked] = useState(false);
+
   return (
     <div className="header">
       <div className="imgText">
@@ -64,11 +68,27 @@ function ChatHeader() {
         <h4>{formattedName(displayName)}</h4>
       </div>
       <ul className="nav_icons">
-        <li>
+        <li onBlur={() => setIsClicked(false)}>
           <ion-icon
             name="ellipsis-vertical"
-            onClick={() => handleUnMatch(matchedID)}
+            onClick={() => setIsClicked((prevState) => !prevState)}
           ></ion-icon>
+          {isClicked && (
+            <ul className="dropdown">
+              <li
+                className="service-item"
+                onClick={() => handleUnMatch(matchedID)}
+              >
+                Unmatch user
+              </li>
+              <li
+                className="service-item"
+                onClick={() => handleUnMatch(matchedID)}
+              >
+                Report
+              </li>
+            </ul>
+          )}
         </li>
       </ul>
     </div>
@@ -77,11 +97,12 @@ function ChatHeader() {
 
 export default function ChatWindow() {
   const [message, setMessage] = useState("");
+  const [isClicked, setIsClicked] = useState(false);
   const { matchedID, areChatsAvailable } = useContext(ChatContext);
   const [cookie] = useCookies(["user"]);
 
-  const handleAddingEmoji = (event, emoji = "💖") => {
-    setMessage((prevMessage) => `${prevMessage} ${emoji}`);
+  const handleAddingEmoji = (emojiObj, event) => {
+    setMessage((prevMessage) => `${prevMessage} ${emojiObj.emoji.trim()}`);
   };
 
   const handleSend = async () => {
@@ -124,9 +145,19 @@ export default function ChatWindow() {
       </ErrorBoundary>
       {areChatsAvailable > 0 && (
         <div className="chat_input">
+          {isClicked && (
+            <EmojiPicker
+              height={500}
+              width={600}
+              searchDisabled={true}
+              onEmojiClick={handleAddingEmoji}
+              skinTonesDisabled={true}
+              previewConfig={{ showPreview: false }}
+            />
+          )}
           <ion-icon
             name="happy-outline"
-            onClick={(event, emoji) => handleAddingEmoji(event, emoji)}
+            onClick={() => setIsClicked((prevState) => !prevState)}
           ></ion-icon>
           <input
             type="text"

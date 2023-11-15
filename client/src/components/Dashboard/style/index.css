@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Mulish&display=swap");
+
 * {
   margin: 0;
   padding: 0;
@@ -10,14 +12,15 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(
+  /* background: linear-gradient(
     180deg,
     rgb(254, 48, 114),
     30%,
     rgb(255, 89, 64),
     60%,
     rgb(255, 255, 255)
-  );
+  ); */
+  background: linear-gradient(180deg, #f43d5e, 30%, #f0738a, 60%, #ff9fb0);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -139,6 +142,36 @@ body {
   position: relative;
   height: calc(100% - 110px);
   overflow: auto;
+}
+
+.chatlist .no-match {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgb(231, 191, 236);
+  /* background: linear-gradient(
+    180deg,
+    rgba(231, 191, 236, 1) 15%,
+    rgba(214, 209, 230, 1) 49%
+  ); */
+  background: linear-gradient(180deg, #ffe2de 15%, #ffd8d3 49%);
+}
+
+.chatlist .no-match h1 {
+  font-size: 2.5rem;
+  margin: 10px;
+  font-family: "Mulish", sans-serif;
+  margin-bottom: 10px;
+  color: #aa8985;
+  margin-top: -30px;
+}
+
+.chatlist .no-match p {
+  font-size: 1rem;
+  margin: 20px;
+  font-family: "Mulish", sans-serif;
 }
 
 .chatlist .block {

@@ -10,6 +10,7 @@ import SwipeCard from "./SwipeCard";
 import ChatWindow from "./ChatWindow";
 import ProfileDisplay from "./ProfileDisplay";
 import ErrorBoundary from "../Error/ErrorBoundary";
+import { NotFoundRight } from "./NotFound";
 
 import { TABS } from "../../constants/constants";
 import { changeTabUtils, handleSwipeEvent } from "../../utils/helper";
@@ -178,15 +179,6 @@ export default function DashboardComponent() {
         loading: false,
         data,
         error: { isError: false, message: "" },
-      }));
-    } else {
-      setSuggestion((prevState) => ({
-        ...prevState,
-        error: {
-          isError: true,
-          message:
-            "Suggestions are currently unavailable. They will be displayed here when ready.",
-        },
       }));
     }
   }, [filteredGenderedUsers[0]]);
@@ -365,7 +357,7 @@ export default function DashboardComponent() {
           </ProfileDisplayContext.Provider>
         )}
       </div>
-      {tab === TABS.PROFILE && (
+      {tab === TABS.PROFILE && suggestion.error.isError === false && (
         <SwipeCard
           displayPic={suggestion.data.displayPic}
           name={suggestion.data.first_name}
@@ -375,9 +367,9 @@ export default function DashboardComponent() {
           handleSwipe={handleSwipe}
           matchedID={suggestion.data.matchedID}
           loading={suggestion.loading}
-          error={suggestion.error}
         />
       )}
+      {tab === TABS.PROFILE && suggestion.error.isError && <NotFoundRight />}
       {tab === TABS.CHATS && (
         <ChatContext.Provider
           value={{
