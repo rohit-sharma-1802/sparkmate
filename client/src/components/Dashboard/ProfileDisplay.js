@@ -21,6 +21,8 @@ export default function ProfileDisplay() {
     setSearchText(event.target.value);
   };
 
+  console.log("filtered-users", matchedArray)
+
   useEffect(() => {
     if (
       matchedArray.length === 1 &&

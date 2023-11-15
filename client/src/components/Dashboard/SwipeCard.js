@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { FaSpotify } from "react-icons/fa";
+
 import { ACTIONS } from "../../constants/constants";
 import wavingHand from "../../images/waving-hand.png";
 
@@ -34,9 +36,9 @@ export default function SwipeCard({
           onClick={(event) => handleSwipe(event, matchedID)}
         ></ion-icon>
       </div>
-      <div className="person-card">
-        <div className="the-card">
-          <div className="the-front">
+      <div className="card">
+        <div className="card-inner">
+          <div className="front">
             {loading === true ? (
               <Skeleton
                 box={true}
@@ -45,80 +47,44 @@ export default function SwipeCard({
                 height={"100%"}
               />
             ) : (
-              <img src={displayPic} className="cover" alt="" />
+              <>
+                <img src={displayPic} alt="jenna" preload />
+                <div className="gradient"></div>
+                <h2>{name}</h2>
+              </>
             )}
           </div>
-          <div className="the-back">
+          <div className="back">
             {loading === true ? (
               <span>Loading...</span>
             ) : (
               <>
-                <p>
-                  <strong>Name:</strong> {name}
-                </p>
-                <p>
-                  <strong>Age:</strong> {age}
-                </p>
-                <p>
-                  <strong>About me:</strong> {about}
-                </p>
+                <img src={wavingHand} alt="waving hand" />
+                <h1>{name}</h1>
+                <p style={{ textAlign: "justify" }}>{about}</p>
+                <ul>
+                  <li>
+                    <h2>Age</h2>
+                    <p>{age}</p>
+                  </li>
+                  <li>
+                    <h2>Height</h2>
+                    <p>182 cm</p>
+                  </li>
+                </ul>
+                <div className="social-media">
+                  <a href="#">
+                    <ion-icon name="logo-instagram"></ion-icon>
+                  </a>
+                  <a href="#">
+                    <FaSpotify style={{ width: "500%", color: "green" }} />
+                  </a>
+                </div>
               </>
             )}
           </div>
         </div>
       </div>
-      {/* <div class="card">
-        <div class="card-inner">
-          <div
-            class="front"
-            style={{
-              backgroundImage: `linear-gradient(
-      to bottom,
-      rgba(245, 246, 252, 0.02),
-      rgba(117, 19, 93, 0.79)
-    ),
-    url(${dis})`,
-            }}
-          >
-            <h2>Jenna Ortega</h2>
-            <p>Wednesday Adams</p>
-            <button>Hover me</button>
-          </div>
-          <div class="back">
-            <img src={wavingHand} alt="waving hand" />
-            <h1>
-              Jenna <span>Ortega</span>
-            </h1>
-            <p>
-              Hi, I'm the famous Wednesday Adams character ya all know from the{" "}
-              <span>@Wednesday</span> web series!
-            </p>
-            <ul>
-              <li>
-                <h2>12K</h2>
-                <p>Followers</p>
-              </li>
-              <li>
-                <h2>250</h2>
-                <p>Following</p>
-              </li>
-              <li>
-                <h2>5K</h2>
-                <p>Likes</p>
-              </li>
-            </ul>
-            <div class="social-media">
-              <button>Follow</button>
-              <a href="#">
-                <ion-icon name="logo-instagram"></ion-icon>
-              </a>
-              <a href="#">
-                <ion-icon name="logo-pinterest"></ion-icon>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div> */}
       <div className="right-icon">
         <ion-icon
           name="arrow-forward-circle-outline"
