@@ -1,0 +1,43 @@
+@import url("https://fonts.googleapis.com/css2?family=Mulish&display=swap");
+
+.container .end-of-swipe {
+  flex: 70%;
+  background: rgb(231, 191, 236);
+  /* background: linear-gradient(
+    90deg,
+    rgba(231, 191, 236, 1) 0%,
+    rgba(214, 209, 230, 1) 0%
+  ); */
+  background: linear-gradient(180deg, #ffe2de 15%, #ffd8d3 49%);
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.container .end-of-swipe h1,
+.container .end-of-swipe h2,
+.container .end-of-swipe p {
+  position: relative;
+  /* left: 20%; */
+}
+
+.container .end-of-swipe h1 {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.container .end-of-swipe h1,
+.container .end-of-swipe h2 {
+  font-family: "Mulish", sans-serif;
+}
+
+.container .end-of-swipe h2 {
+  font-size: 2rem;
+  margin-bottom: 5px;
+  font-style: normal;
+}
+
+.container .end-of-swipe p {
+  font-size: 1.3rem;
+  margin-top: 30px;
+}
