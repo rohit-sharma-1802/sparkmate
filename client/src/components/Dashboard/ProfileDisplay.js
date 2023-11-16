@@ -8,6 +8,7 @@ import "./style/index.css";
 import "./style/swipeCard.css";
 import "./style/chatBox.css";
 import ErrorBoundary from "../Error/ErrorBoundary";
+import { NotFoundLeft } from "./NotFound";
 
 const sanitizedString = (params) => params.trim().toLowerCase();
 
@@ -19,6 +20,8 @@ export default function ProfileDisplay() {
   const handleSearch = (event) => {
     setSearchText(event.target.value);
   };
+
+  console.log("filtered-users", matchedArray)
 
   useEffect(() => {
     if (
@@ -59,11 +62,7 @@ export default function ProfileDisplay() {
               <ProfileElement key={index} />
             ))}
           {loader === false && matchedArray.length === 0 && (
-            <h4>
-              {tab === TABS.PROFILE
-                ? `Interested in you. When someone swipes right on you, you'll be able to find them right here`
-                : `Get Swiping. When you match with other users they'll appear here, where you can send them a message`}
-            </h4>
+            <NotFoundLeft tab={tab} />
           )}
           {loader === false &&
             filteredProfile?.length > 0 &&

@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { FaSpotify } from "react-icons/fa";
+
 import { ACTIONS } from "../../constants/constants";
+import wavingHand from "../../images/waving-hand.png";
 
 import "./style/index.css";
 import "./style/swipeCard.css";
@@ -16,7 +19,6 @@ export default function SwipeCard({
   handleSwipe,
   loading,
   matchedID,
-  error,
 }) {
   useEffect(() => {
     document.addEventListener("keydown", handleSwipe, false);
@@ -34,38 +36,50 @@ export default function SwipeCard({
           onClick={(event) => handleSwipe(event, matchedID)}
         ></ion-icon>
       </div>
-      <div className="person-card">
-        <div className="the-card">
-          <div className="the-front">
+      <div className="card">
+        <div className="card-inner">
+          <div className="front">
             {loading === true ? (
               <Skeleton
                 box={true}
                 baseColor="#C0C0C0"
                 width={"100%"}
-                height={"100%"}
+                height={600}
               />
-            ) : error.isError ? (
-              <p>{error.message}</p>
-            ) : (
-              <img src={displayPic} className="cover" alt="" />
-            )}
-          </div>
-          <div className="the-back">
-            {loading === true ? (
-              <span>Loading...</span>
-            ) : error.isError ? (
-              <p>{error.message}</p>
             ) : (
               <>
-                <p>
-                  <strong>Name:</strong> {name}
-                </p>
-                <p>
-                  <strong>Age:</strong> {age}
-                </p>
-                <p>
-                  <strong>About me:</strong> {about}
-                </p>
+                <img src={displayPic} alt="jenna" preload />
+                <div className="gradient"></div>
+                <h2>{name}</h2>
+              </>
+            )}
+          </div>
+          <div className="back">
+            {loading === true ? (
+              <span>Loading...</span>
+            ) : (
+              <>
+                <img src={wavingHand} alt="waving hand" />
+                <h1>{name}</h1>
+                <p style={{ textAlign: "justify" }}>{about}</p>
+                <ul>
+                  <li>
+                    <h2>Age</h2>
+                    <p>{age}</p>
+                  </li>
+                  <li>
+                    <h2>Height</h2>
+                    <p>182 cm</p>
+                  </li>
+                </ul>
+                <div className="social-media">
+                  <a href="#">
+                    <ion-icon name="logo-instagram"></ion-icon>
+                  </a>
+                  <a href="#">
+                    <FaSpotify style={{ width: "500%", color: "green" }} />
+                  </a>
+                </div>
               </>
             )}
           </div>

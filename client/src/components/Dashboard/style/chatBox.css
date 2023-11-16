@@ -154,3 +154,42 @@
   border-radius: 30px;
   font-size: 1em;
 }
+
+aside.EmojiPickerReact.epr-main {
+  position: absolute !important;
+  height: 300px !important;
+  width: 300px !important;
+  bottom: 60px;
+}
+
+.rightSide-chatBox .nav_icons .dropdown {
+  position: absolute;
+  z-index: 3;
+  right: 20px;
+  top: 52px;
+  font-size: small;
+  background-color: rgb(253, 253, 253);
+  padding: 0.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  font-size: 10px;
+  width: 120px;
+  text-align: left;
+  /* display: none; */
+}
+
+.rightSide-chatBox .nav_icons .dropdown .service-item:hover {
+  background-color: aliceblue;
+  border-radius: 2px;
+}
+
+.rightSide-chatBox .nav_icons .dropdown .service-item {
+  display: block;
+  margin: 0;
+  padding: 10px;
+  letter-spacing: 1px;
+}
+
+.rightSide-chatBox .nav_icons .services:hover > .dropdown {
+  display: block;
+}

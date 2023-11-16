@@ -1,74 +1,209 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+Balinese&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital@1&display=swap");
+
 .container .rightSide-SwipeCard {
+  background: lightgray;
+  flex: 70%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
   background: linear-gradient(
     360deg,
     rgba(254, 172, 48, 0.2),
     rgb(255, 89, 64, 0.2)
   );
-  flex: 70%;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
-strong {
-  font-size: 15px;
 }
 
-.container .rightSide-SwipeCard .person-card {
-  position: relative;
+.container .rightSide-SwipeCard .card {
   width: 50%;
-  height: 85%;
-  overflow: hidden;
-  border-radius: 20px;
+  height: 90%;
+  margin: 0 2rem;
 }
 
-.container .rightSide-SwipeCard .the-front {
-  position: absolute;
+.container .rightSide-SwipeCard .card-inner {
   width: 100%;
   height: 100%;
-  backface-visibility: hidden;
-  background: #ffc728;
-  color: #333;
-}
-
-.container .rightSide-SwipeCard .the-card .the-back {
-  padding: 20px;
-  background-color: #ffffff;
-}
-
-.container .rightSide-SwipeCard .the-card .the-back p {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.container .rightSide-SwipeCard .the-card {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  position: relative;
+  transition: transform 1s;
   transform-style: preserve-3d;
-  transition: transform 0.5s ease 0.3s;
 }
 
-.container .rightSide-SwipeCard .the-card:hover {
+.container .rightSide-SwipeCard .card .front,
+.container .rightSide-SwipeCard .card .back {
+  width: 100%;
+  height: 100%;
+  border-radius: 15px;
+  position: absolute;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.container .rightSide-SwipeCard .card .front {
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: white;
+  height: 100%;
+  width: 100%;
+}
+
+.container .rightSide-SwipeCard .card .front img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.container .rightSide-SwipeCard .card .front .gradient {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(245, 246, 252, 0.02),
+    rgba(117, 19, 93, 0.73)
+  );
+}
+
+.container .rightSide-SwipeCard .card .back {
+  background: #fff;
+  color: #333;
+  padding: 20px 40px;
   transform: rotateY(180deg);
 }
 
-.container .rightSide-SwipeCard img {
-  width: 100%;
-  height: 100%;
+.container .rightSide-SwipeCard .card .front h2 {
+  font-weight: 700;
+  font-size: 2.7rem;
+  font-style: normal;
+  z-index: 4;
+  text-align: left;
+  font-family: "Noto Serif Balinese", serif;
+  letter-spacing: 3px;
 }
 
-.container .rightSide-SwipeCard .the-back {
+.container .rightSide-SwipeCard .card .front p {
+  color: #ccc;
+  font-size: 13px;
+  z-index: 4;
+}
+
+.container .rightSide-SwipeCard .card .back h1 {
+  font-size: 50px;
+  line-height: 55px;
+  margin-bottom: 30px;
+}
+
+.container .rightSide-SwipeCard .card .back h1 span {
+  font-weight: 400;
+}
+
+.container .rightSide-SwipeCard .card .back p {
+  font-size: 14px;
+  margin-bottom: 80px;
+}
+
+.container .rightSide-SwipeCard .card .back:nth-child(2) {
+  font-style: italic;
+}
+
+.container .rightSide-SwipeCard .card .back p span {
+  font-weight: 600;
+}
+
+.container .rightSide-SwipeCard .card .back img {
+  width: 120px;
+  margin-bottom: 2rem;
+}
+
+.container .rightSide-SwipeCard .card .back ul {
+  display: flex;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.container .rightSide-SwipeCard .card .back li {
+  list-style: none;
+  flex: 1;
+  text-align: center;
+  color: #555;
+  font-size: 12px;
+  position: relative;
+}
+
+.container .rightSide-SwipeCard .card .back li h2 {
+  font-size: 20px;
+}
+
+.container .rightSide-SwipeCard .card .back li p {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.container .rightSide-SwipeCard .card .back .social-media {
+  display: flex;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.container .rightSide-SwipeCard .card .back .social-media button {
+  background: #7800ad;
+  color: #fff;
+  border: 0;
+  outline: 0;
+  padding: 8px 25px;
+  border-radius: 30px;
+  font-size: 14px;
+  margin-right: 15px;
+  box-shadow: 0 8px 10px rgba(120, 0, 173, 0.3);
+}
+
+.container .rightSide-SwipeCard .card .back .social-media a {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 5px;
+}
+
+.container .rightSide-SwipeCard .card .back .social-media a ion-icon {
+  width: 50%;
+  color: #7800ad;
+}
+
+.container .rightSide-SwipeCard .card .back li::after {
+  content: "";
+  width: 1.5px;
+  height: 20px;
+  background: #7800ad;
   position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  background: #fafafa;
-  color: #333;
-  border: 2px solid brown;
-  border-radius: 20px;
+  top: 5px;
+  right: 0;
+}
+
+.container .rightSide-SwipeCard .card .back li:last-child::after {
+  display: none;
+}
+
+.container .rightSide-SwipeCard .card:hover .card-inner {
   transform: rotateY(180deg);
 }
 
 .container .rightSide-SwipeCard div ion-icon {
   font-size: 3em;
+}
+
+.container .rightSide-SwipeCard div ion-icon:hover {
+  background-color: rgb(143, 5, 5);
+  border-radius: 10px;
 }

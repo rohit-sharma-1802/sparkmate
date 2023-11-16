@@ -1,3 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Mulish&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=PT+Serif:ital@1&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=ABeeZee&display=swap");
+
 * {
   margin: 0;
   padding: 0;
@@ -10,14 +14,15 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(
+  /* background: linear-gradient(
     180deg,
     rgb(254, 48, 114),
     30%,
     rgb(255, 89, 64),
     60%,
     rgb(255, 255, 255)
-  );
+  ); */
+  background: linear-gradient(180deg, #f43d5e, 30%, #f0738a, 60%, #ff9fb0);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -141,6 +146,36 @@ body {
   overflow: auto;
 }
 
+.chatlist .no-match {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgb(231, 191, 236);
+  /* background: linear-gradient(
+    180deg,
+    rgba(231, 191, 236, 1) 15%,
+    rgba(214, 209, 230, 1) 49%
+  ); */
+  background: linear-gradient(180deg, #ffe2de 15%, #ffd8d3 49%);
+}
+
+.chatlist .no-match h1 {
+  font-size: 2.5rem;
+  margin: 10px;
+  font-family: "Mulish", sans-serif;
+  margin-bottom: 10px;
+  color: #aa8985;
+  margin-top: -30px;
+}
+
+.chatlist .no-match p {
+  font-size: 1rem;
+  margin: 20px;
+  font-family: "Mulish", sans-serif;
+}
+
 .chatlist .block {
   position: relative;
   width: 100%;
@@ -204,7 +239,7 @@ detai .chatlist .block .imgBox {
 .chatlist .block .details .listHead {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 2px;
+  margin-top: -20px;
   padding-left: 5%;
   width: 80%;
   height: 20px;
@@ -212,12 +247,17 @@ detai .chatlist .block .imgBox {
 
 .listHead p {
   text-align: left;
+  font-family: "PT Serif", serif;
+  letter-spacing: 0.08ic;
 }
 
 .chatlist .block .details .listHead h4 {
   font-size: 1.1em;
   font-weight: 600;
   color: #111;
+  margin-top: 10px;
+  font-family: "ABeeZee", sans-serif;
+  letter-spacing: 0.07ic;
 }
 
 .message_p {
